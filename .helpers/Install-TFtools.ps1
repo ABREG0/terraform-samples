@@ -83,6 +83,25 @@ function Install-psCore {
    Write-Host " PS Core is Installed... `n version: $($PSInstalled.Displayversion)" -ForegroundColor Green
   }
 }
+function Install-azModule {
+  pwsh -Command {
+
+    write-host "PS version $($psversionTable.psversion)" -ForegroundColor red
+    $azModule = Get-InstalledModule -Name az -ErrorAction SilentlyContinue
+  
+    #check for Azure az module
+    if($null -eq $azModule){
+
+    write-host "Installing Azure az module"
+    #Install-Module -Name Az -Repository PSGallery -Force -AllowClobber
+
+    }
+     else{
+
+       write-host "Azure az module is installed... Version: $($azModule.Version)"
+     }
+  }
+}
 function Install-GitWin {
 
   $gitHub = 'https://github.com'
@@ -216,3 +235,5 @@ Install-GitWin
 Install-Terraform
 
 Install-vscode
+
+Install-azModule
