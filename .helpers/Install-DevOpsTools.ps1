@@ -1,23 +1,25 @@
+
 #cabrego 2021
-write-host "Check if PS was launched as admin..." -ForegroundColor Yellow
+write-host "Check if PS was launched as admin..."
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))  
 {  
   $arguments = $SCRIPT:MyInvocation.MyCommand.Path 
-  write-host "check if PS was launched as admin... re-launching the script:  $($arguments) " -ForegroundColor Red
-  Start-Process powershell -Verb runAs -ArgumentList $arguments
-  Break
+  write-host " Running as Admin script:  $($arguments) " -ForegroundColor Red
+  Start-Process powershell -Verb runAs -ArgumentList $arguments -WindowStyle Hidden
+  #Break
 } 
  else{
-    Write-Host "PowerShell was Launched as Admin... " -ForegroundColor Green
+    Write-Host " PowerShell was Launched as Admin... `n " -ForegroundColor Green
  }
 
   $TLS12Protocol = [System.Net.SecurityProtocolType] 'Tls12'
   [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
+
 function Install-vscode {
-    $vcodeVersion = @(code -v)[0]
+    $vcodeVersion = (cmd /c code -v)[0]
 
     if($null -eq $vcodeVersion){
-      Write-Host "vs code not installed... Installing"
+      Write-Host " VS code not installed... Installing" -ForegroundColor Red
 
       $url = 'https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user'
 
@@ -31,9 +33,10 @@ function Install-vscode {
     }
     else{
 
-      Write-Host "vs code version: $($vcodeVersion)"
+      Write-Host " vs code version: $($vcodeVersion)" -ForegroundColor Green
     }
 }
+
 function Install-choco {
     Set-ExecutionPolicy Bypass -Scope Process -Force;
 
@@ -51,6 +54,7 @@ function Install-choco {
     
     choco install terraform
 }
+
 function Install-psCore {
 
   $poshHub = 'https://github.com/PowerShell/PowerShell'
@@ -62,53 +66,54 @@ function Install-psCore {
   $PSInstalled = Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {($_.DisplayName -match "PowerShell [\d]-x" ) -and ($_.Displayversion -match $LatestRelease) }
   
   if($null -eq $PSInstalled){
-    Write-Host " PS core is NOT installed...  Need to Install PowerShell Core latest version" -ForegroundColor Red
-
+ 
     $source = "$($poshHub)/releases/download/v$($LatestRelease)/PowerShell-$($LatestRelease)-win-x64.msi"
 
     $destination = "$env:TEMP\PowerShell-$($LatestRelease)-win-x64.msi"
 
     Invoke-webrequest -uri $source -outfile $destination -UseBasicParsing
 
-    Write-Host "Installing Lastest version of Powershell core... $($LatestRelease)"
+    Write-Host " Installing Lastest version of Powershell core... $($LatestRelease)" -ForegroundColor Red
 
     $InstallArg = "/package $($destination) /qb ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1"
 
     Start-Process -FilePath msiexec -ArgumentList $InstallArg -wait
 
     Remove-Item $destination -Force
+
    }
    else{
 
-   Write-Host " PS Core is Installed... `n version: $($PSInstalled.Displayversion)" -ForegroundColor Green
+   Write-Host " PS Core is Installed... Version: $($PSInstalled.Displayversion)" -ForegroundColor Green
   }
 }
-function Install-azModule {
-  pwsh -Command {
 
-    write-host "PS version $($psversionTable.psversion)" -ForegroundColor red
-    $azModule = Get-InstalledModule -Name az -ErrorAction SilentlyContinue
-  
-    #check for Azure az module
+
+function Install-azModule {
+    $azModule  = @(cmd /c "C:\Program Files\PowerShell\7\pwsh.exe" -c {Get-InstalledModule -Name az -ErrorAction SilentlyContinue | Select-Object version})
+
     if($null -eq $azModule){
 
-    write-host "Installing Azure az module"
+    write-host " az Module is NOT Installed... Installing Azure az module" -ForegroundColor red 
+    start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -ArgumentList '-c "& {Install-Module -Name Az -Repository PSGallery -Force -AllowClobber}"'
     #Install-Module -Name Az -Repository PSGallery -Force -AllowClobber
 
     }
      else{
 
-       write-host "Azure az module is installed... Version: $($azModule.Version)"
+       write-host " Azure az module is installed... Version: $($azModule.Version)" -ForegroundColor Green 
      }
-  }
 }
+
+
 function Install-GitWin {
 
   $gitHub = 'https://github.com'
 
   try {
 
-    $gitVer = (git --version).split(' ')[-1]
+    $gitVer = (git --version).split(' ')[-1] 2>&1
+
   }
   catch {
 
@@ -123,11 +128,11 @@ function Install-GitWin {
 
   if(($LatestRelease -replace 'v','') -eq $gitVer){
 
-      Write-Host "Latest version of Git is installed... version: $($gitVer)"
+      Write-Host " Latest version of Git is installed... version: $($gitVer)" -ForegroundColor Green
   }
    else{
 
-      Write-Host "Installed version: $($gitVer) `n Later version of Git is not installed... Installing... $LatestRelease" -ForegroundColor Red
+      Write-Host "Later version of Git is NOT Installed... Installing... $LatestRelease" -ForegroundColor Red
       $gitWeb = (Invoke-WebRequest -Uri "$($gitHub)/git-for-windows/git/releases/tag/$($LatestRelease)" -UseBasicParsing)
 
       $source = "$($gitHub)$($gitWeb.Links.href -match 'git-\w.*\W.*-64-bit.exe')"
@@ -141,7 +146,8 @@ function Install-GitWin {
       Remove-Item -Path $destination -Force 
   }
 }
-Function Install-AzureCLI {
+
+function Install-AzureCLI {
     try {
 
       $azVersion = @(az version) | ConvertFrom-Json
@@ -149,7 +155,7 @@ Function Install-AzureCLI {
       $InstalledCLI = $azVersion.'azure-cli' 
     }
     catch {
-
+        Write-Host " Azure CLI is NOT installed... Installing" -ForegroundColor red 
       $InstalledCLI = 0  
     }  
 
@@ -165,33 +171,35 @@ Function Install-AzureCLI {
 
       $destination = "$env:TEMP\AzureCLI-$($LatestRelease)-win.msi"
 
-      Write-Host "`nDownloading Azure CLI to current folder"
+      #Write-Host "`nDownloading Azure CLI to current folder"
       Invoke-WebRequest -Uri $source -OutFile $destination -UseBasicParsing ; 
 
-      Write-Host "`nInstalling Azure CLI from current folder"
+      #Write-Host "`nInstalling Azure CLI from current folder"
       Start-Process msiexec.exe -Wait -ArgumentList "/I $destination /qb" 
 
-      Write-Host "`nRemove Azure CLI from current folder"
+      #Write-Host "`nRemove Azure CLI from current folder"
       Remove-Item $destination -Force
     }
     else{
 
-      Write-Host "Azure CLI is Installed... `n version: $($InstalledCLI)" -ForegroundColor Green
+      Write-Host " Azure CLI is Installed... Version: $($InstalledCLI)" -ForegroundColor Green
      }
 }
+
 function Install-Terraform {
     
     $Url = 'https://www.terraform.io/downloads.html'
     
     try {
 
-      $terraformPath = $ENV:Path -split ';' | Where-Object { $_ -match 'terraform'}
-
       $tfVersion = @(terraform -v) | Where-Object{$_ -match 'terraform'} | ForEach-Object{"$($_ -replace 'terraform v')"}
+
+      #$terraformPath = $ENV:Path -split ';' | Where-Object { $_ -match 'terraform'}
+
     }
     catch {
-
-      $terraformPath = $null
+        $tfVersion = $null
+      #$terraformPath = $null
     }
 
     if(($null -eq $terraformPath) -and ($null -eq $tfVersion)){
@@ -216,17 +224,15 @@ function Install-Terraform {
 
         Remove-Item -Path $destination -Force
 
-        Set-ItemProperty -Path $envRegpath -Name PATH -Value $PathString
+        Set-ItemProperty -Path $envRegpath -Name PATH -Value $PathString -ErrorAction SilentlyContinue
 
         $ENV:Path += ";$($terraformPath)"
       }
       else{
 
-        Write-Host "Terraform is Installed... version: $($tfVersion)"
+        Write-Host " Terraform is Installed... version: $($tfVersion)" -ForegroundColor Green
       }
 }
-
-Install-AzureCLI
 
 Install-psCore
 
@@ -235,5 +241,7 @@ Install-GitWin
 Install-Terraform
 
 Install-vscode
+
+Install-AzureCLI
 
 Install-azModule
