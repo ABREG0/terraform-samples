@@ -16,16 +16,24 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
   [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
 
 function Install-vscode {
-    $vcodeVersion = (cmd /c code -v)[0]
+    try {
+
+        $vcodeVersion = @(cmd /c code -v)[0]
+
+      }
+      catch {
+
+        Write-Host " VS code not installed... Installing" -ForegroundColor Red
+
+      } 
 
     if($null -eq $vcodeVersion){
-      Write-Host " VS code not installed... Installing" -ForegroundColor Red
 
-      $url = 'https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user'
+      $source = 'https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user'
 
       $destination = "$env:TEMP\vscode.exe"
 
-      Invoke-WebRequest -Uri $url -OutFile $destination -UseBasicParsing
+      Invoke-WebRequest -Uri $source -OutFile $destination -UseBasicParsing
 
       Start-Process -Wait -FilePath $destination -ArgumentList '/VERYSILENT /NORESTART /MERGETASKS=!runcode,desktopicon,addcontextmenufiles,addcontextmenufolders'
       
@@ -57,6 +65,38 @@ function Install-choco {
 
 function Install-psCore {
 
+    $poshHub = 'https://github.com/PowerShell/PowerShell'
+  
+    $getSite = (Invoke-WebRequest -Uri $poshHub -UseBasicParsing)
+  
+    $LatestRelease = ($getSite.links.href -match 'releases/tag').split('/')[-1] -replace 'v',''
+  
+    $PSInstalled = Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {($_.DisplayName -match "PowerShell [\d]-x" ) -and ($_.Displayversion -match $LatestRelease) }
+    
+    if($null -eq $PSInstalled){
+        
+      Write-Host " Installing Lastest version of Powershell core... $($LatestRelease)" -ForegroundColor red 
+  
+      $source = "$($poshHub)/releases/download/v$($LatestRelease)/PowerShell-$($LatestRelease)-win-x64.msi"
+  
+      $destination = "$env:TEMP\PowerShell-$($LatestRelease)-win-x64.msi"
+  
+      Invoke-webrequest -uri $source -outfile $destination -UseBasicParsing
+
+      $InstallArg = "/i $($destination) /q ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1"
+  
+      Start-Process -FilePath msiexec -ArgumentList $InstallArg -wait
+  
+      Remove-Item $destination -Force
+     }
+     else{
+  
+     Write-Host " PS Core is Installed... `n version: $($PSInstalled.Displayversion)" -ForegroundColor Green
+    }
+}
+
+function Install-psCoreold {
+
   $poshHub = 'https://github.com/PowerShell/PowerShell'
 
   $getSite = (Invoke-WebRequest -Uri $poshHub -UseBasicParsing)
@@ -67,17 +107,18 @@ function Install-psCore {
   
   if($null -eq $PSInstalled){
  
+    Write-Host " Installing Lastest version of Powershell core... $($LatestRelease)" -ForegroundColor Red
+    
     $source = "$($poshHub)/releases/download/v$($LatestRelease)/PowerShell-$($LatestRelease)-win-x64.msi"
 
-    $destination = "$env:TEMP\PowerShell-$($LatestRelease)-win-x64.msi"
+    $destination = "$($env:TEMP)\PowerShell-$($LatestRelease)-win-x64.msi"
 
     Invoke-webrequest -uri $source -outfile $destination -UseBasicParsing
 
-    Write-Host " Installing Lastest version of Powershell core... $($LatestRelease)" -ForegroundColor Red
 
-    $InstallArg = "/package $($destination) /qb ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1"
+    $InstallArg = "/i $($destination) /q ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1"
 
-    Start-Process -FilePath msiexec -ArgumentList $InstallArg -wait
+    Start-Process -Wait -FilePath msiexec -ArgumentList $InstallArg
 
     Remove-Item $destination -Force
 
@@ -88,9 +129,8 @@ function Install-psCore {
   }
 }
 
-
 function Install-azModule {
-    $azModule  = @(cmd /c "C:\Program Files\PowerShell\7\pwsh.exe" -c {Get-InstalledModule -Name az -ErrorAction SilentlyContinue | Select-Object version})
+    $azModule  = $(cmd /c "C:\Program Files\PowerShell\7\pwsh.exe" -c {Get-InstalledModule -Name az -ErrorAction SilentlyContinue | Select-Object version})
 
     if($null -eq $azModule){
 
@@ -105,26 +145,24 @@ function Install-azModule {
      }
 }
 
-
 function Install-GitWin {
+    $gitHub = 'https://github.com'
 
-  $gitHub = 'https://github.com'
+    $url = "$($gitHub)/git-for-windows/git"
 
+    $getSite = (Invoke-WebRequest -Uri $url -UseBasicParsing)
+  
+    $LatestRelease = ($getSite.links.href -match 'releases/tag').split('/')[-1]
+  
   try {
 
-    $gitVer = (git --version).split(' ')[-1] 2>&1
+    $gitVer = (git --version).split(' ')[-1]
 
   }
   catch {
 
     $gitVer = 0
   }
-  
-  $url = "$($gitHub)/git-for-windows/git"
-
-  $getSite = (Invoke-WebRequest -Uri $url -UseBasicParsing)
-
-  $LatestRelease = ($getSite.links.href -match 'releases/tag').split('/')[-1]
 
   if(($LatestRelease -replace 'v','') -eq $gitVer){
 
@@ -132,7 +170,7 @@ function Install-GitWin {
   }
    else{
 
-      Write-Host "Later version of Git is NOT Installed... Installing... $LatestRelease" -ForegroundColor Red
+      Write-Host " Later version of Git is NOT Installed... Installing... $LatestRelease" -ForegroundColor Red
       $gitWeb = (Invoke-WebRequest -Uri "$($gitHub)/git-for-windows/git/releases/tag/$($LatestRelease)" -UseBasicParsing)
 
       $source = "$($gitHub)$($gitWeb.Links.href -match 'git-\w.*\W.*-64-bit.exe')"
@@ -148,6 +186,12 @@ function Install-GitWin {
 }
 
 function Install-AzureCLI {
+    $cliHub = 'https://github.com/Azure/azure-cli'
+
+    $getSite = (Invoke-WebRequest -Uri $cliHub -UseBasicParsing)
+
+    $LatestRelease = ($getSite.links.href -match 'releases/tag').split('/')[-1] -replace 'azure-cli-',''
+
     try {
 
       $azVersion = @(az version) | ConvertFrom-Json
@@ -156,14 +200,8 @@ function Install-AzureCLI {
     }
     catch {
         Write-Host " Azure CLI is NOT installed... Installing" -ForegroundColor red 
-      $InstalledCLI = 0  
+        $InstalledCLI = 0  
     }  
-
-    $cliHub = 'https://github.com/Azure/azure-cli'
-
-    $getSite = (Invoke-WebRequest -Uri $cliHub -UseBasicParsing)
-
-    $LatestRelease = ($getSite.links.href -match 'releases/tag').split('/')[-1] -replace 'azure-cli-',''
 
     if($LatestRelease -ne $InstalledCLI){
 
@@ -175,7 +213,7 @@ function Install-AzureCLI {
       Invoke-WebRequest -Uri $source -OutFile $destination -UseBasicParsing ; 
 
       #Write-Host "`nInstalling Azure CLI from current folder"
-      Start-Process msiexec.exe -Wait -ArgumentList "/I $destination /qb" 
+      Start-Process msiexec.exe -Wait -ArgumentList "/I $destination /q" 
 
       #Write-Host "`nRemove Azure CLI from current folder"
       Remove-Item $destination -Force
