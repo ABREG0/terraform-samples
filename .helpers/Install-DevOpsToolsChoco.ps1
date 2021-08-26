@@ -25,24 +25,21 @@ function Install-choco {
     
 
 }
-function Install-azModule {
-  pwsh -Command {
 
-    write-host "PS version $($psversionTable.psversion)" -ForegroundColor red
-    $azModule = Get-InstalledModule -Name az -ErrorAction SilentlyContinue
-  
-    #check for Azure az module
+function Install-azModule {
+    $azModule  = $(cmd /c "C:\Program Files\PowerShell\7\pwsh.exe" -c {Get-InstalledModule -Name az -ErrorAction SilentlyContinue | Select-Object version})
+
     if($null -eq $azModule){
 
-    write-host "Installing Azure az module"
+    write-host " az Module is NOT Installed... Installing Azure az module" -ForegroundColor red 
+    start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -ArgumentList '-c "& {Install-Module -Name Az -Repository PSGallery -Force -AllowClobber}"'
     #Install-Module -Name Az -Repository PSGallery -Force -AllowClobber
 
     }
      else{
 
-       write-host "Azure az module is installed... Version: $($azModule.Version)"
+       write-host " Azure az module is installed... Version: $($azModule.Version)" -ForegroundColor Green 
      }
-  }
 }
 
 Install-choco
