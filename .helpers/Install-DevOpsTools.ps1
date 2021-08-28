@@ -1,5 +1,11 @@
 
 #cabrego 2021
+# #Graphviz
+# Get-WmiObject -Class Win32_InstalledWin32Program | ? {$_.name -match 'PowerShell'} | select name,version
+# Get-WmiObject -Class Win32_InstalledWin32Program | ? {$_.name -match 'Azure cli'} | select name,version
+# Get-WmiObject -Class Win32_InstalledWin32Program | ? {$_.name -match 'Microsoft Visual Studio Code'} | select name,version
+# Get-WmiObject -Class Win32_InstalledWin32Program | ? {$_.name -match 'git'} | select name,version
+
 write-host "Check if PS was launched as admin..."
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))  
 {  
