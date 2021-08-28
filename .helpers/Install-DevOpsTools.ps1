@@ -95,40 +95,6 @@ function Install-psCore {
     }
 }
 
-function Install-psCoreold {
-
-  $poshHub = 'https://github.com/PowerShell/PowerShell'
-
-  $getSite = (Invoke-WebRequest -Uri $poshHub -UseBasicParsing)
-
-  $LatestRelease = ($getSite.links.href -match 'releases/tag').split('/')[-1] -replace 'v',''
-
-  $PSInstalled = Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {($_.DisplayName -match "PowerShell [\d]-x" ) -and ($_.Displayversion -match $LatestRelease) }
-  
-  if($null -eq $PSInstalled){
- 
-    Write-Host " Installing Lastest version of Powershell core... $($LatestRelease)" -ForegroundColor Red
-    
-    $source = "$($poshHub)/releases/download/v$($LatestRelease)/PowerShell-$($LatestRelease)-win-x64.msi"
-
-    $destination = "$($env:TEMP)\PowerShell-$($LatestRelease)-win-x64.msi"
-
-    Invoke-webrequest -uri $source -outfile $destination -UseBasicParsing
-
-
-    $InstallArg = "/i $($destination) /q ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1"
-
-    Start-Process -Wait -FilePath msiexec -ArgumentList $InstallArg
-
-    Remove-Item $destination -Force
-
-   }
-   else{
-
-   Write-Host " PS Core is Installed... Version: $($PSInstalled.Displayversion)" -ForegroundColor Green
-  }
-}
-
 function Install-azModule {
     $azModule  = $(cmd /c "C:\Program Files\PowerShell\7\pwsh.exe" -c {Get-InstalledModule -Name az -ErrorAction SilentlyContinue | Select-Object version})
 
@@ -170,7 +136,7 @@ function Install-GitWin {
   }
    else{
 
-      Write-Host " Later version of Git is NOT Installed... Installing... $LatestRelease" -ForegroundColor Red
+      Write-Host " Latest version of Git is NOT Installed... Installing... $LatestRelease" -ForegroundColor Red
       $gitWeb = (Invoke-WebRequest -Uri "$($gitHub)/git-for-windows/git/releases/tag/$($LatestRelease)" -UseBasicParsing)
 
       $source = "$($gitHub)$($gitWeb.Links.href -match 'git-\w.*\W.*-64-bit.exe')"
@@ -272,14 +238,20 @@ function Install-Terraform {
       }
 }
 
+Write-host "Installing PowerShell Core"
 Install-psCore
 
+Write-host "Installing GitWin"
 Install-GitWin
 
+Write-host "Installing Terraform"
 Install-Terraform
 
+Write-host "Installing VS Code"
 Install-vscode
 
+Write-host "Installing Azure CLI"
 Install-AzureCLI
 
+Write-host "Installing Azure az Module"
 Install-azModule
