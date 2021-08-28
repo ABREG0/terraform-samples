@@ -16,19 +16,20 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
  $TLS12Protocol = [System.Net.SecurityProtocolType] 'Tls12'
 [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
 
- function Install-Terraform {
+function Install-Terraform {
     
   $Url = 'https://www.terraform.io/downloads.html'
   
   try {
 
-    $terraformPath = $ENV:Path -split ';' | Where-Object { $_ -match 'terraform'}
-
     $tfVersion = @(terraform -v) | Where-Object{$_ -match 'terraform'} | ForEach-Object{"$($_ -replace 'terraform v')"}
+
+    #$terraformPath = $ENV:Path -split ';' | Where-Object { $_ -match 'terraform'}
+
   }
   catch {
-
-    $terraformPath = $null
+      $tfVersion = $null
+    #$terraformPath = $null
   }
 
   if(($null -eq $terraformPath) -and ($null -eq $tfVersion)){
@@ -53,13 +54,13 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 
       Remove-Item -Path $destination -Force
 
-      Set-ItemProperty -Path $envRegpath -Name PATH -Value $PathString
+      Set-ItemProperty -Path $envRegpath -Name PATH -Value $PathString -ErrorAction SilentlyContinue
 
       $ENV:Path += ";$($terraformPath)"
     }
     else{
 
-      Write-Host "Terraform is Installed... version: $($tfVersion)"
+      Write-Host " Terraform is Installed... version: $($tfVersion)" -ForegroundColor Green
     }
 }
 

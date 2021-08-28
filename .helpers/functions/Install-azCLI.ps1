@@ -17,7 +17,14 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
  $TLS12Protocol = [System.Net.SecurityProtocolType] 'Tls12'
 [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
 
-Function Install-AzureCLI {
+
+function Install-AzureCLI {
+  $cliHub = 'https://github.com/Azure/azure-cli'
+
+  $getSite = (Invoke-WebRequest -Uri $cliHub -UseBasicParsing)
+
+  $LatestRelease = ($getSite.links.href -match 'releases/tag').split('/')[-1] -replace 'azure-cli-',''
+
   try {
 
     $azVersion = @(az version) | ConvertFrom-Json
@@ -25,15 +32,9 @@ Function Install-AzureCLI {
     $InstalledCLI = $azVersion.'azure-cli' 
   }
   catch {
-
-    $InstalledCLI = 0  
+      Write-Host " Azure CLI is NOT installed... Installing" -ForegroundColor red 
+      $InstalledCLI = 0  
   }  
-
-  $cliHub = 'https://github.com/Azure/azure-cli'
-
-  $getSite = (Invoke-WebRequest -Uri $cliHub -UseBasicParsing)
-
-  $LatestRelease = ($getSite.links.href -match 'releases/tag').split('/')[-1] -replace 'azure-cli-',''
 
   if($LatestRelease -ne $InstalledCLI){
 
@@ -41,19 +42,20 @@ Function Install-AzureCLI {
 
     $destination = "$env:TEMP\AzureCLI-$($LatestRelease)-win.msi"
 
-    Write-Host "`nDownloading Azure CLI to current folder"
+    #Write-Host "`nDownloading Azure CLI to current folder"
     Invoke-WebRequest -Uri $source -OutFile $destination -UseBasicParsing ; 
 
-    Write-Host "`nInstalling Azure CLI from current folder"
-    Start-Process msiexec.exe -Wait -ArgumentList "/I $destination /qb" 
+    #Write-Host "`nInstalling Azure CLI from current folder"
+    Start-Process msiexec.exe -Wait -ArgumentList "/I $destination /q" 
 
-    Write-Host "`nRemove Azure CLI from current folder"
+    #Write-Host "`nRemove Azure CLI from current folder"
     Remove-Item $destination -Force
   }
   else{
 
-    Write-Host "Azure CLI is Installed... `n version: $($InstalledCLI)" -ForegroundColor Green
+    Write-Host " Azure CLI is Installed... Version: $($InstalledCLI)" -ForegroundColor Green
    }
 }
+
 
 Install-AzureCLI
