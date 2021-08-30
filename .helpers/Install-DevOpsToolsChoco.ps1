@@ -102,7 +102,7 @@ function Add-vsCodeExtentions {
   $vcExtentions = $vcExtentions.Split("`r")
 
   $vcExtentions.Count
-
+  #Get-Process -Id $PID | Select-Object -ExpandProperty Path | ForEach-Object { Invoke-Command { & "$_" } -NoNewScope }
   for ($i = 0; $i -lt $vcExtentions.Count; $i++) {
       $ext = "$($vcExtentions[$i])"
       Write-Host "Installing extention Name: $($vcExtentions[$i])"
@@ -128,3 +128,4 @@ choco install terraform -y --force --force-dependencies
 Add-vsCodeExtentions -vcExtentions $vcExtentions
 
 Install-azModule
+#Get-Process -Id $PID | Select-Object -ExpandProperty Path | ForEach-Object { Invoke-Command { & "$_" } -NoNewScope }

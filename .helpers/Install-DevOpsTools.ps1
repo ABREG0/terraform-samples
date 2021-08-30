@@ -269,6 +269,7 @@ Install-azModule
 
 
 # TODO
+# Get-Process -Id $PID | Select-Object -ExpandProperty Path | ForEach-Object { Invoke-Command { & "$_" } -NoNewScope }
 # #Graphviz
 # Get-WmiObject -Class Win32_InstalledWin32Program | ? {$_.name -match 'PowerShell'} | select name,version
 # Get-WmiObject -Class Win32_InstalledWin32Program | ? {$_.name -match 'Azure cli'} | select name,version
