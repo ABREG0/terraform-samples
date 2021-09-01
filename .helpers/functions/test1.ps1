@@ -25,7 +25,8 @@ azps-tools.azps-tools
                                 Write-Host "Installing extention Name: $($vcExtentions[$i])"
                                 #& cmd /c code --install-extension $ext --force
                             }
-                        Start-Sleep 10} -args $hi,$hi2,$vcExtentions
+                        Start-Sleep 10 
+                        } -args $hi,$hi2,$vcExtentions
                     }
 
 
