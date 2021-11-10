@@ -17,25 +17,33 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
 
 function Install-vscode {
-    $vcodeVersion = @(code -v)[0]
+  try {
 
-    if($null -eq $vcodeVersion){
-      Write-Host "vs code not installed... Installing"
+      $vcodeVersion = @(cmd /c code -v)[0]
 
-      $url = 'https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user'
-
-      $destination = "$env:TEMP\vscode.exe"
-
-      Invoke-WebRequest -Uri $url -OutFile $destination -UseBasicParsing
-
-      Start-Process -Wait -FilePath $destination -ArgumentList '/VERYSILENT /NORESTART /MERGETASKS=!runcode,desktopicon,addcontextmenufiles,addcontextmenufolders'
-      
-      Remove-Item -Path $destination -Force
     }
-    else{
+    catch {
 
-      Write-Host "vs code version: $($vcodeVersion)"
-    }
+      Write-Host " VS code not installed... Installing" -ForegroundColor Red
+
+    } 
+
+  if($null -eq $vcodeVersion){
+
+    $source = 'https://code.visualstudio.com/sha/download?build=stable&os=win32-x64-user'
+
+    $destination = "$env:TEMP\vscode.exe"
+
+    Invoke-WebRequest -Uri $source -OutFile $destination -UseBasicParsing
+
+    Start-Process -Wait -FilePath $destination -ArgumentList '/VERYSILENT /NORESTART /MERGETASKS=!runcode,desktopicon,addcontextmenufiles,addcontextmenufolders'
+    
+    Remove-Item -Path $destination -Force
+  }
+  else{
+
+    Write-Host " vs code version: $($vcodeVersion)" -ForegroundColor Green
+  }
 }
 
 Install-vscode 

@@ -15,6 +15,7 @@ if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdenti
 
  $TLS12Protocol = [System.Net.SecurityProtocolType] 'Tls12'
 [System.Net.ServicePointManager]::SecurityProtocol = $TLS12Protocol
+
 function Install-psCore {
 
   $poshHub = 'https://github.com/PowerShell/PowerShell'
@@ -26,7 +27,8 @@ function Install-psCore {
   $PSInstalled = Get-ItemProperty HKLM:\SOFTWARE\Microsoft\Windows\CurrentVersion\Uninstall\* | Where-Object {($_.DisplayName -match "PowerShell [\d]-x" ) -and ($_.Displayversion -match $LatestRelease) }
   
   if($null -eq $PSInstalled){
-    Write-Host " PS core is NOT installed...  Need to Install PowerShell Core latest version" -ForegroundColor Red
+      
+    Write-Host " Installing Lastest version of Powershell core... $($LatestRelease)" -ForegroundColor red 
 
     $source = "$($poshHub)/releases/download/v$($LatestRelease)/PowerShell-$($LatestRelease)-win-x64.msi"
 
@@ -34,9 +36,7 @@ function Install-psCore {
 
     Invoke-webrequest -uri $source -outfile $destination -UseBasicParsing
 
-    Write-Host "Installing Lastest version of Powershell core... $($LatestRelease)"
-
-    $InstallArg = "/package $($destination) /qb ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1"
+    $InstallArg = "/i $($destination) /q ADD_EXPLORER_CONTEXT_MENU_OPENPOWERSHELL=1 ENABLE_PSREMOTING=1 REGISTER_MANIFEST=1"
 
     Start-Process -FilePath msiexec -ArgumentList $InstallArg -wait
 
@@ -49,23 +49,19 @@ function Install-psCore {
 }
 
 function Install-azModule {
-  pwsh -Command {
+  $azModule  = $(cmd /c "C:\Program Files\PowerShell\7\pwsh.exe" -c {Get-InstalledModule -Name az -ErrorAction SilentlyContinue | Select-Object version})
 
-    write-host "PS version $($psversionTable.psversion)" -ForegroundColor red
-    $azModule = Get-InstalledModule -Name az -ErrorAction SilentlyContinue
-  
-    #check for Azure az module
-    if($null -eq $azModule){
+  if($null -eq $azModule){
 
-    write-host "Installing Azure az module"
-    #Install-Module -Name Az -Repository PSGallery -Force -AllowClobber
+  write-host " az Module is NOT Installed... Installing Azure az module" -ForegroundColor red 
+  start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -ArgumentList '-c "& {Install-Module -Name Az -Repository PSGallery -Force -AllowClobber}"'
+  #Install-Module -Name Az -Repository PSGallery -Force -AllowClobber
 
-    }
-     else{
-
-       write-host "Azure az module is installed... Version: $($azModule.Version)"
-     }
   }
+   else{
+
+     write-host " Azure az module is installed... Version: $($azModule.Version)" -ForegroundColor Green 
+   }
 }
 
 Install-psCore
