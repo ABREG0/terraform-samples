@@ -106,7 +106,8 @@ function Add-vsCodeExtentions {
   for ($i = 0; $i -lt $vcExtentions.Count; $i++) {
       $ext = "$($vcExtentions[$i])"
       Write-Host "Installing extention Name: $($vcExtentions[$i])"
-      & cmd /c code --install-extension $ext --force
+      #& cmd /c code --install-extension $ext --force
+      & pwsh -c "code --install-extension $ext --force"
   }
 }
 
