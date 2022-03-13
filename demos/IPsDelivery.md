@@ -1,6 +1,7 @@
-Questions:
+# Questions
+
 1. intend and effect
-   1. is the IP created delivering what's intended. (if we can get/include a IP creator / owner to explain an IP or module and the set of 'goals/purpose' to accomplish when used, IE: goal: fast reliable way to travel from A to B by land. products: car/motorcycle. misusage: using a car to tow a 40ft trailer.                                                          
+   1. is the IP created delivering what's intended. (if we can get/include a IP creator / owner to explain an IP or module and the set of 'goals/purpose' to accomplish when used, IE: goal: fast reliable way to travel from A to B by land. products: car/motorcycle. misusage: using a car to tow a 40ft trailer.
    how to use modularized IPs
    orderly/organized method to deliver IPs 
    Documenting the order PPT or presentation docs use
