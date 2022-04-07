@@ -1,6 +1,6 @@
 variable "gallery_name" {
   description = "Name of the gallery to deploy"
-  default     = "gallerydevops01"
+  default     = ""
 }
 variable "image_name" {
   description = "Name of the image to deploy"
@@ -27,12 +27,12 @@ variable "region" {
 
 variable "resource_group_name" {
   description = "Name of the Resource Group in which to deploy these resources"
-#   default     = "RG-Prod-USW2"
-  default     = "RG-Test-USW2"
+#   default     = "2"
+  default     = ""
 }
 
 # variable "resource_group2_name" {
 #   description = "Name of the Resource Group in which to deploy these resources"
-# #   default     = "RG-Prod-USW2-CA"
-#   default     = "DSHD_Network"
+# #   default     = ""
+#   default     = ""
 # }
