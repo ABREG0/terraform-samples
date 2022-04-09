@@ -269,7 +269,7 @@ SETTINGS
 #   }
 #   settings = <<SETTINGS
 #     {
-#         "fileUris": ["https://saprodusw2devops01.blob.core.windows.net/wvdscripts/wvd-agent.ps1?sp=r&st=2021-06-09T21:51:52Z&se=2051-06-10T05:51:52Z&spr=https&sv=2020-02-10&sr=b&sig=9oWeFrSPg%2FH9uZ9oT146%2B7KDm4DO0f4By3tlVoszH7k%3D"],
+#         "fileUris": ["https://[storageAccountName].blob.core.windows.net/wvdscripts/wvd-agent.ps1?sp=r&st=2021-06-09T21:51:52Z&se=2051-06-10T05:51:52Z&spr=https&sv=2020-02-10&sr=b&sig=9oWeFrSPg%"],
         
 #         "commandToExecute": "powershell -ExecutionPolicy Unrestricted -File ./wvd-agent.ps1 ${module.hostpool.wvd.registration_info[0].token}"
 #     }
