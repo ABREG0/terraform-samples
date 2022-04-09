@@ -114,7 +114,7 @@ function Add-vsCodeExtentions {
 
 Install-choco
 
-choco install powershell-core --version=7.1.4 -y --force --force-dependencies
+choco install powershell-core --version=7.2.1 -y --force --force-dependencies
     
 choco install azure-cli -y --force --force-dependencies
 
