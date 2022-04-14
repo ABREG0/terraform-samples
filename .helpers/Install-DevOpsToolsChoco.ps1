@@ -111,6 +111,7 @@ function Add-vsCodeExtentions {
   }
 }
 
+wsl --install
 
 Install-choco
 
