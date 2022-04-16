@@ -1,4 +1,6 @@
 #cabrego 2021
+# todo: add wsl with ubuntu, https://www.graphviz.org/download
+
 write-host "Check if PS was launched as admin..." -ForegroundColor Yellow
 if (-NOT ([Security.Principal.WindowsPrincipal][Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole([Security.Principal.WindowsBuiltInRole] "Administrator"))  
 {  
