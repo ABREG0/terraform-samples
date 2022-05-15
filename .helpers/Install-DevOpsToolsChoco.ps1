@@ -112,8 +112,11 @@ function Add-vsCodeExtentions {
       & pwsh -c "code --install-extension $ext --force"
   }
 }
+get-appxpackage Microsoft.WindowsTerminal -allusers | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
 
 wsl --install
+
+DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V
 
 Install-choco
 
