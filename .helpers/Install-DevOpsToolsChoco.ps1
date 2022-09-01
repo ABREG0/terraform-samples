@@ -130,6 +130,8 @@ choco install git -y --force --force-dependencies
 
 choco install terraform -y --force --force-dependencies
 
+choco install googlechrome -y --force --force-dependencies
+
 & refreshenv
 
 Add-vsCodeExtentions -vcExtentions $vcExtentions
