@@ -34,7 +34,7 @@ function Install-azModule {
     if($null -eq $azModule){
 
     write-host " az Module is NOT Installed... Installing Azure az module" -ForegroundColor red 
-    start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -WorkingDirectory ~  -ArgumentList '-c "& {Install-Module -Name Az -Repository PSGallery -Force -AllowClobber}"'
+    start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -WorkingDirectory ~  -ArgumentList '-c "& {Install-Module -Name Az -Scope AllUsers  -Repository PSGallery -Force -AllowClobber}"'
     }
      else{
 
@@ -112,11 +112,6 @@ function Add-vsCodeExtentions {
       & pwsh -c "code --install-extension $ext --force"
   }
 }
-get-appxpackage Microsoft.WindowsTerminal -allusers | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
-
-wsl --install
-
-DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V
 
 Install-choco
 
@@ -134,7 +129,12 @@ choco install googlechrome -y --force --force-dependencies
 
 & refreshenv
 
-Add-vsCodeExtentions -vcExtentions $vcExtentions
 
 Install-azModule
+get-appxpackage Microsoft.WindowsTerminal -allusers | Foreach {Add-AppxPackage -DisableDevelopmentMode -Register "$($_.InstallLocation)\AppXManifest.xml"}
+
+wsl --install
+
+DISM /Online /Enable-Feature /All /FeatureName:Microsoft-Hyper-V
+
 #Get-Process -Id $PID | Select-Object -ExpandProperty Path | ForEach-Object { Invoke-Command { & "$_" } -NoNewScope }
