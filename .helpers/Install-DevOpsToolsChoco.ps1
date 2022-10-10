@@ -113,6 +113,10 @@ function Add-vsCodeExtentions {
   }
 }
 
+### todo ###
+install Authme (Two-factor authenticator)
+############
+
 Install-choco
 
 choco install powershell-core --version=7.2.1 -y --force --force-dependencies
