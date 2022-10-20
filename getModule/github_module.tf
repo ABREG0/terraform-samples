@@ -13,3 +13,11 @@ module "sentinel" {
 # module "storage" {
 #   source = "git::ssh://username@example.com/storage.git"
 # }
+
+#Azure Devops repo
+#    source              = "git::https://dev.azure.com/org/devProject/_git/repoName//folder1/base/resource_group?ref=mybranc-name"
+#   module "resourcegroup" {
+#   source              = "git::https://dev.azure.com/[org]/[project]/_git/terraform.module//azurerm/base/resource_group?ref=[BranchName or tagVer v1.2.3"
+#   name                = "name"
+#   location            = "eastus2"
+# }
