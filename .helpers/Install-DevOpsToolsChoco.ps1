@@ -117,7 +117,10 @@ function Add-vsCodeExtentions {
 # install Authme (Two-factor authenticator)
 ############
 
-Install-Module az -Force -Scope AllUsers
+Install-Module az.accounts -Force -Scope AllUsers
+Install-Module az.resources -Force -Scope AllUsers
+Install-Module az.comopute -Force -Scope AllUsers
+Install-Module az.keyvault -Force -Scope AllUsers
 
 Install-choco
 
