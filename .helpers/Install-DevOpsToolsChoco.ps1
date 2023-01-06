@@ -36,7 +36,7 @@ function Install-azModule {
     if($null -eq $azModule){
 
     write-host " az Module is NOT Installed... Installing Azure az module" -ForegroundColor red 
-    start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -WorkingDirectory ~  -ArgumentList '-c "& {"Az.Accounts","Az.Resources","Az.Comopute","Az.Keyvault" | Install-Module -Name $_ -Scope AllUsers  -Repository PSGallery -Force -AllowClobber}"'
+    start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -WorkingDirectory ~  -ArgumentList '-c "& {"Az.Accounts","Az.Resources","Az.Comopute","Az.Keyvault" | % {Install-Module -Name $_ -Scope AllUsers  -Repository PSGallery -Force -AllowClobber}}"'
     }
      else{
 
@@ -121,7 +121,7 @@ function Add-vsCodeExtentions {
 
 Set-PSRepository -name 'PSGallery' -InstallationPolicy Trusted 
 
-"Az.Accounts","Az.Resources","Az.Comopute","Az.Keyvault" | Install-Module -Name $_ -Scope AllUsers  -Repository PSGallery -Force -AllowClobber
+"Az.Accounts","Az.Resources","Az.Comopute","Az.Keyvault" | % {Install-Module -Name $_ -Scope AllUsers  -Repository PSGallery -Force -AllowClobber}
 
 Install-choco
 
