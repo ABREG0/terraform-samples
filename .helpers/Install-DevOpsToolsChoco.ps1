@@ -29,12 +29,14 @@ function Install-choco {
 }
 
 function Install-azModule {
+
+    Set-PSRepository -name 'PSGallery' -InstallationPolicy Trusted 
     $azModule  = $(cmd /c "C:\Program Files\PowerShell\7\pwsh.exe" -WorkingDirectory ~ -c {Get-InstalledModule -Name az -ErrorAction SilentlyContinue | Select-Object version})
 
     if($null -eq $azModule){
 
     write-host " az Module is NOT Installed... Installing Azure az module" -ForegroundColor red 
-    start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -WorkingDirectory ~  -ArgumentList '-c "& {Install-Module -Name Az -Scope AllUsers  -Repository PSGallery -Force -AllowClobber}"'
+    start-process -FilePath "C:\Program Files\PowerShell\7\pwsh.exe" -WorkingDirectory ~  -ArgumentList '-c "& {"Az.Accounts","Az.Resources","Az.Comopute","Az.Keyvault" | Install-Module -Name $_ -Scope AllUsers  -Repository PSGallery -Force -AllowClobber}"'
     }
      else{
 
@@ -117,10 +119,9 @@ function Add-vsCodeExtentions {
 # install Authme (Two-factor authenticator)
 ############
 
-Install-Module az.accounts -Force -Scope AllUsers
-Install-Module az.resources -Force -Scope AllUsers
-Install-Module az.comopute -Force -Scope AllUsers
-Install-Module az.keyvault -Force -Scope AllUsers
+Set-PSRepository -name 'PSGallery' -InstallationPolicy Trusted 
+
+"Az.Accounts","Az.Resources","Az.Comopute","Az.Keyvault" | Install-Module -Name $_ -Scope AllUsers  -Repository PSGallery -Force -AllowClobber
 
 Install-choco
 
