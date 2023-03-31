@@ -1,147 +1,166 @@
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPLOY AN AZURE KEY VAULT
+# This is an example of how to deploy a Key Vault 
+# ---------------------------------------------------------------------------------------------------------------------
+# See test/azure/terraform_azure_keyvault_example_test.go for how to write automated tests for this code.
+# ---------------------------------------------------------------------------------------------------------------------
 
-variable "name" {
-  type        = string
-  description = "(required) describe your variable"
-  default     = "ted-kv-dev-centralus"
-}
-variable "resource_group_name" {
-  type        = string
-  description = "(required) describe your variable"
-  default     = "ted-ml-dev-centralus"
-}
-variable "location" {
-  type        = string
-  description = "(required) describe your variable"
-  default     = "centralus"
-}
-
-variable "log_analytics_workspace_id" {
-  description = "Required: workspace to send logs"
-  default     = null
-}
-variable "enable_rbac_authorization" {
-  type        = bool
-  description = "(required) describe your variable"
-  default     = true
-}
-variable "purge_protection_enabled" {
-  type        = bool
-  description = "(required) describe your variable"
-  default     = false
+provider "azurerm" {
+  version = "~>2.20"
+  features {
+    key_vault {
+      purge_soft_delete_on_destroy = false
+    }
+  }
 }
 
-variable "enabled_for_deployment" {
-  type        = bool
-  description = "(required) describe your variable"
-  default     = true
-}
-variable "enabled_for_template_deployment" {
-  type        = bool
-  description = "(required) describe your variable"
-  default     = true
-}
-variable "enabled_for_disk_encryption" {
-  type        = bool
-  description = "(required) describe your variable"
-  default     = true
+# ---------------------------------------------------------------------------------------------------------------------
+# PIN TERRAFORM VERSION TO >= 0.12
+# The examples have been upgraded to 0.12 syntax
+# ---------------------------------------------------------------------------------------------------------------------
+
+terraform {
+  # This module is now only being tested with Terraform 0.13.x. However, to make upgrading easier, we are setting
+  # 0.12.26 as the minimum version, as that version added support for required_providers with source URLs, making it
+  # forwards compatible with 0.13.x code.
+  required_version = ">= 0.12.26"
 }
 
-variable "sku" {
-  type        = string
-  description = "(required) describe your variable"
-  default     = "standard"
-}
-variable "network_default_action" {
-  type        = string
-  description = "(optional) describe your variable"
-  default     = "Deny"
-}
-variable "bypass" {
-  type        = string
-  description = "(required) describe your variable"
-  default     = "AzureServices"
-}
-variable "ip_rules" {
-  type        = list(string)
-  description = "(required) describe your variable"
-  default     = [] # ["43.0.0.0/24","54.0.0.0/24"]
-}
-variable "allowed_subnets" {
-  type        = list(string)
-  description = "(required) describe your variable"
-  default     = [] # ["id1","id2"]
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPLOY A RESOURCE GROUP
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "azurerm_resource_group" "resource_group" {
+  name     = "terratest-kv-rg-${var.postfix}"
+  location = var.location
 }
 
-variable "tags" {
-  type        = map(any)
-  description = "(required) describe your variable"
-  default = {
-    environment = "dev"
-    owner       = "IT"
+# ---------------------------------------------------------------------------------------------------------------------
+# CONFIGURE A CLIENT FOR KEY VAULT ACCESS
+# ---------------------------------------------------------------------------------------------------------------------
+
+data "azurerm_client_config" "current" {}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# CONFIGURE AN ACCESS POLICY TO MANAGE THE SECRET, KEY, AND CERTIFICATE
+# ---------------------------------------------------------------------------------------------------------------------
+
+data "azurerm_key_vault_access_policy" "contributor" {
+  name = "Key, Secret, & Certificate Management"
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPLOY A KEY VAULT
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "azurerm_key_vault" "key_vault" {
+  name                        = "keyvault-${var.postfix}"
+  location                    = azurerm_resource_group.resource_group.location
+  resource_group_name         = azurerm_resource_group.resource_group.name
+  enabled_for_disk_encryption = true
+  tenant_id                   = data.azurerm_client_config.current.tenant_id
+
+  soft_delete_retention_days = 7
+  purge_protection_enabled   = false
+
+  sku_name = "standard"
+
+  access_policy {
+    tenant_id = data.azurerm_client_config.current.tenant_id
+    object_id = data.azurerm_client_config.current.object_id
+
+    key_permissions = [
+      "create",
+      "get",
+      "list",
+      "delete",
+      "purge",
+    ]
+
+    secret_permissions = [
+      "set",
+      "get",
+      "list",
+      "delete",
+      "purge",
+    ]
+
+    certificate_permissions = [
+      "create",
+      "delete",
+      "deleteissuers",
+      "get",
+      "getissuers",
+      "import",
+      "list",
+      "listissuers",
+      "managecontacts",
+      "manageissuers",
+      "setissuers",
+      "update",
+      "purge",
+    ]
+  }
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+# DEPLOY A SECRET TO THE KEY VAULT
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "azurerm_key_vault_secret" "key_vault_secret" {
+  name         = "${var.secret_name}-${var.postfix}"
+  value        = "mysecret"
+  key_vault_id = azurerm_key_vault.key_vault.id
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+#  DEPLOY A KEY TO THE KEY VAULT
+# ---------------------------------------------------------------------------------------------------------------------
+
+resource "azurerm_key_vault_key" "key_vault_key" {
+  name         = "${var.key_name}-${var.postfix}"
+  key_vault_id = azurerm_key_vault.key_vault.id
+  key_type     = "RSA"
+  key_size     = 2048
+
+  key_opts = [
+    "decrypt",
+    "encrypt",
+    "sign",
+    "unwrapKey",
+    "verify",
+    "wrapKey",
+  ]
+}
+
+# ---------------------------------------------------------------------------------------------------------------------
+#  DEPLOY A CERTIFICATE TO THE KEY VAULT
+#  The example uses a sample pfx file with plain text password to make it easier to test. However, in production modules 
+#  should use a more secure mechanisms for transferring these files.
+# ---------------------------------------------------------------------------------------------------------------------
+resource "azurerm_key_vault_certificate" "key_vault_certificate" {
+  name         = "${var.certificate_name}-${var.postfix}"
+  key_vault_id = azurerm_key_vault.key_vault.id
+
+  certificate {
+    contents = filebase64("example.pfx")
+    password = "password"
   }
 
-}
+  certificate_policy {
+    issuer_parameters {
+      name = "Self"
+    }
 
-data "azurerm_client_config" "this" {}
+    key_properties {
+      exportable = true
+      key_size   = 2048
+      key_type   = "RSA"
+      reuse_key  = false
+    }
 
-resource "azurerm_key_vault" "this" {
-  name                = var.name
-  resource_group_name = var.resource_group_name
-  location            = var.location
-
-  tenant_id                       = data.azurerm_client_config.this.tenant_id
-  soft_delete_retention_days      = 30
-  enabled_for_deployment          = var.enabled_for_deployment
-  enabled_for_template_deployment = var.enabled_for_template_deployment
-  enabled_for_disk_encryption     = var.enabled_for_disk_encryption
-  enable_rbac_authorization       = var.enable_rbac_authorization
-  purge_protection_enabled        = var.purge_protection_enabled
-  sku_name                        = var.sku
-  tags                            = var.tags
-  network_acls {
-    default_action             = var.network_default_action
-    bypass                     = var.bypass
-    ip_rules                   = var.ip_rules
-    virtual_network_subnet_ids = var.allowed_subnets
+    secret_properties {
+      content_type = "application/x-pkcs12"
+    }
   }
-
 }
-
-# resource "azurerm_monitor_diagnostic_setting" "this" {
-#   name               = "${var.name}-logging"
-#   target_resource_id = azurerm_key_vault.this.id
-#   log_analytics_workspace_id = var.log_analytics_workspace_id
-
-#   # storage_account_id = data.azurerm_storage_account.this.id
-
-#   enabled_log {
-#     category = "Logs"
-
-#     retention_policy {
-#       enabled = false
-#     }
-#   }
-
-#   metric {
-#     category = "Metrics"
-
-#     retention_policy {
-#       enabled = false
-#     }
-#   }
-# }
-
-output "id" {
-  value = azurerm_key_vault.this.id
-}
-output "name" {
-  value = azurerm_key_vault.this.name
-}
-output "location" {
-  value = azurerm_key_vault.this.location
-}
-output "keyVault" {
-  value = azurerm_key_vault.this
-}
-
-  
