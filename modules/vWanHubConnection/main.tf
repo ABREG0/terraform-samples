@@ -39,3 +39,51 @@ output "name" {
   value = azurerm_virtual_hub_connection.this.name
 }
 
+
+/*
+variable "source_vnet" {
+  description = "vnet map name and rg"
+  type        = map(string)
+  default = {
+    "name"                = "vn-mtm-prod-wus2-01"
+    "resource_group_name" = "vwan-rg"
+  }
+}
+
+variable "vhub" {
+  description = "vhub map name and rg"
+  type        = map(string)
+  default = {
+    "name"                = "vwan-rg"
+    "resource_group_name" = "vwan-rg"
+  }
+}
+
+data "azurerm_virtual_network" "source" {
+  name                = var.source_vnet.name
+  resource_group_name = var.source_vnet.resource_group_name
+}
+
+data "azurerm_virtual_hub" "vhub" {
+  name                = var.vhub.name
+  resource_group_name = var.vhub.resource_group_name
+}
+
+
+
+variable "vhub_connection" {
+  type = map(string)
+  default = {
+    "name" = "vnetName"
+  }
+}
+
+variable "vwan" {
+  type = map(string)
+}
+
+data "azurerm_virtual_wan" "vwan" {
+  name                = var.vwan.name
+  resource_group_name = var.vwan.resource_group_name
+ }
+*/

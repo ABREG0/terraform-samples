@@ -42,7 +42,12 @@ resource "azurerm_network_security_group" "this" {
   }
 }
 
-
+# module "diag" {
+#   source                     = "../../diag"
+#   name                       = "${azurerm_network_security_group.this.name}-diag-logging"
+#   log_analytics_workspace_id = var.log_analytics_workspace_id
+#   resource_id                = azurerm_network_security_group.this.id
+# }
 output "id" {
   value = azurerm_network_security_group.this.id
 }
