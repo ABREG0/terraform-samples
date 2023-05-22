@@ -197,11 +197,11 @@ module "vhub_route_table_r1_routes" {
 module "vhub_default_route_table_r1_routes" {
   source = "../../modules/vhubRTroutes"
   name           = "default-rt-r1-${local.environment}-${local.region1.location}"
-  route_table_id                            = module.vhub_route_table_r1.id
+  route_table_id                            = module.vhub_r1.default_rt_id
   destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
   destinations                         = ["10.0.0.0/24"]
   next_hop_type                                      = "ResourceId"
-  next_hop                            = module.vhub_r1.default_rt_id
+  next_hop                            = module.vhub_connection_r1.id
 }
 /*
 resource "azurerm_express_route_connection" "this_r1" {
@@ -349,7 +349,7 @@ module "vhub_route_table_r2" {
   source = "../../modules/vhubRouteTable"
   name           = "rt-r2-${local.environment}-${local.region2.location}"
   virtual_hub_id = module.vhub_r2.id     # "rg-dev-westus3"
-  labels         = ["rt1","pan-nva"]
+  labels         = ["rt2","pan-nva"]
   
 }
 module "vhub_route_table_r2_routes" {
@@ -364,11 +364,11 @@ module "vhub_route_table_r2_routes" {
 module "vhub_default_route_table_r2_routes" {
   source = "../../modules/vhubRTroutes"
   name           = "default-rt-r2-${local.environment}-${local.region1.location}"
-  route_table_id                            = module.vhub_route_table_r2.id
+  route_table_id                            = module.vhub_r2.default_rt_id
   destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
   destinations                         = ["10.0.0.0/24"]
   next_hop_type                                      = "ResourceId"
-  next_hop                            = module.vhub_r2.default_rt_id
+  next_hop                            = module.vhub_connection_r2.id
 }
 /*
 module "ExR_circuit_r2" {
