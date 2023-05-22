@@ -19,7 +19,7 @@ locals {
     service_provider_name = "Equinix"
     peering_location      = "Silicon Valley" # "Equinix-Silicon-Valley"
     peering_type          = "AzurePrivatePeering"
-    ExR_gw_name           = "exr-gw-${local.environment}-westus3"
+    ExR_gw_name           = "exr-gw-r1-${local.environment}-westus3"
     
   }
 
@@ -91,9 +91,7 @@ module "vwan" {
     local.tags
   )
 }
-data vwam_name {
-  vwam_id = 
-}
+
 module "vhub_r1" {
   source              = "../../modules/vHub"
   name                = local.region1.name # 
@@ -321,6 +319,7 @@ resource "azurerm_express_route_connection" "this_r2" {
   express_route_gateway_id         = module.ExR_gw_r2.id
   express_route_circuit_peering_id = module.ExR_circuit_peering_r2.id
 }
+
 module "vnet_r2" {
 
   source = "../../modules/network/vnet"
