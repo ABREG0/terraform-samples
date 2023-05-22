@@ -19,7 +19,7 @@ locals {
     service_provider_name = "Equinix"
     peering_location      = "Silicon Valley" # "Equinix-Silicon-Valley"
     peering_type          = "AzurePrivatePeering"
-    ExR_gw_name           = "exr-gw-${local.environment}-westus3"
+    ExR_gw_name           = "exr-gw-r1-${local.environment}-westus3"
     
   }
 
@@ -178,12 +178,18 @@ module "ExR_gw_r1" {
     local.tags
   )
 }
+/*
 resource "azurerm_express_route_connection" "this_r1" {
   name                             = "example-r1"
   express_route_gateway_id         = module.ExR_gw_r1.id
   express_route_circuit_peering_id = module.ExR_circuit_peering_r1.id
 }
-
+resource "azurerm_express_route_connection" "this_r2" {
+  name                             = "example-r2"
+  express_route_gateway_id         = module.ExR_gw_r2.id
+  express_route_circuit_peering_id = module.ExR_circuit_peering_r2.id
+}
+*/
 module "vnet_r1" {
 
   source = "../../modules/network/vnet"
@@ -318,11 +324,6 @@ module "ExR_gw_r2" {
     },
     local.tags
   )
-}
-resource "azurerm_express_route_connection" "this_r2" {
-  name                             = "example-r2"
-  express_route_gateway_id         = module.ExR_gw_r2.id
-  express_route_circuit_peering_id = module.ExR_circuit_peering_r2.id
 }
 
 module "vnet_r2" {
