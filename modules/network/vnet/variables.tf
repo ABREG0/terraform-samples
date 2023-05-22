@@ -23,10 +23,27 @@ variable "location" {
   description = "The location/region where the core network will be created. The full list of Azure regions can be found at https://azure.microsoft.com/regions"
   #default     = "westus"
 }
-variable "log_analytics_workspace_id" {
-  description = "Required: workspace to send logs"
-  default     = null
+
+variable "diagnosticSettings" {
+  type = object({
+    log_analytics_workspace_id = string
+  })
+  default = {
+    log_analytics_workspace_id = null
+  }
 }
+
+# variable "log_analytics_workspace_id" {
+#   description = "Required: workspace to send logs" 
+#   type = string
+#   default = ""
+# }
+
+# variable "logs_to_enable" {
+#   type = list(string)
+#   default = [ ]
+# }
+
 variable "ddos_protection_plan" {
   type    = any
   default = []

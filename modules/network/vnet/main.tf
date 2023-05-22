@@ -27,18 +27,6 @@ resource "azurerm_virtual_network" "this" {
   }
 
 }
-module "nsg_default" {
-  source              = "../nsg"
-  name                = "${var.name}-default-nsg"
-  location            = var.location
-  resource_group_name = var.resource_group_name
-  tags                = var.tags
-}
-
-resource "azurerm_subnet_network_security_group_association" "this" {
-  subnet_id                 = azurerm_subnet.subnet["plpe"].id
-  network_security_group_id = module.nsg_default.id
-}
 
 resource "azurerm_subnet" "subnet" {
   # depends_on = [azurerm_virtual_network.this]
@@ -72,4 +60,17 @@ resource "azurerm_subnet" "subnet" {
       service_endpoint_policy_ids,
     ]
   }
+}
+
+resource "azurerm_subnet_network_security_group_association" "this" {
+  subnet_id                 = azurerm_subnet.subnet["plpe"].id
+  network_security_group_id = module.nsg_default.id
+}
+
+module "nsg_default" {
+  source              = "../nsg"
+  name                = "${var.name}-default-nsg"
+  location            = var.location
+  resource_group_name = var.resource_group_name
+  tags                = var.tags
 }
