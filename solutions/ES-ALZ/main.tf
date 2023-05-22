@@ -70,17 +70,6 @@ locals {
   # ])
 }
 
-# module "diagnosticSettings" {
-#   source = "../../modules/diagnosticSettings"
-
-#   for_each = toset(local.logging)
-
-#   name = "diags-${each.value.name}"
-#   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id != "" ? azurerm_log_analytics_workspace.this.id : null
-#   resource_id = each.value.id == "" ? null : each.value.id
-
-# } 
-
 module "vwan" {
   source              = "../../modules/vwan"
   name                = local.vwan.vawan_name
@@ -102,6 +91,9 @@ module "vwan" {
     local.tags
   )
 }
+data vwam_name {
+  vwam_id = 
+}
 module "vhub_r1" {
   source              = "../../modules/vHub"
   name                = local.region1.name # 
@@ -109,16 +101,16 @@ module "vhub_r1" {
   location            = local.region1.location # "westus3"
   vwan_id             = module.vwan.id
   address_prefix      = local.region1.address_prefix
-  route = [ 
-        {
-            address_prefixes = ["10.21.20.0/24"]
-            next_hop_ip_address = "10.20.2.10" #"vhub-dev-westus3-with-${module.vnet.name}"
-        },
-        {
-            address_prefixes = ["10.21.24.0/24"]
-            next_hop_ip_address = "10.20.3.10" #"vhub-dev-westus3-with-${module.vnet.name}"
-        } 
-    ]
+  # route = [ 
+  #       {
+  #           address_prefixes = ["10.21.20.0/24"]
+  #           next_hop_ip_address = "10.20.2.10" #"vhub-dev-westus3-with-${module.vnet.name}"
+  #       },
+  #       {
+  #           address_prefixes = ["10.21.24.0/24"]
+  #           next_hop_ip_address = "10.20.3.10" #"vhub-dev-westus3-with-${module.vnet.name}"
+  #       } 
+  #   ]
   
   tags = merge(
     {
@@ -128,41 +120,7 @@ module "vhub_r1" {
     local.tags
   )
 }
-module "ExR_circuit_r1" {
-    source = "../../modules/vHubExRcircuit"
-  name                  = local.region1.ExR_circuit_name # 
-  resource_group_name   = module.resource_group.name     # "rg-dev-westus3"
-  location              = local.region1.location
-  service_provider_name = local.region1.service_provider_name
-  peering_location      = local.region1.peering_location # "Silicon Valley" # "Equinix-Silicon-Valley"
-  bandwidth_in_mbps     = 50
-  
-  # express_route_port_id = module.ExR_circuit_port.id
-  # bandwidth_in_gbps     = 10
 
-  allow_classic_operations = false
-
-    tier   = "Standard"
-    family = "MeteredData"
-
-  tags = {
-      team = "local-me"
-      environment = "local-${local.environment}"
-    }
-}
-module "ExR_circuit_peering_r1" {
-  source = "../../modules/vHubExRcircuitPeering"
-
-  peering_type                  = local.region1.peering_type
-  express_route_circuit_name    = module.ExR_circuit_r1.name
-  resource_group_name           = module.resource_group.name     # "rg-dev-westus3"
-  shared_key                    = "ItsASecret"
-  peer_asn                      = 100
-  primary_peer_address_prefix   = "192.168.1.0/30"
-  secondary_peer_address_prefix = "192.168.1.0/30"
-  vlan_id                       = 100
-  
-}
 module "ExR_gw_r1" {
   source = "../../modules/vHubExRgateway"
   name                = local.region1.ExR_gw_name
@@ -177,11 +135,6 @@ module "ExR_gw_r1" {
     },
     local.tags
   )
-}
-resource "azurerm_express_route_connection" "this_r1" {
-  name                             = "example-r1"
-  express_route_gateway_id         = module.ExR_gw_r1.id
-  express_route_circuit_peering_id = module.ExR_circuit_peering_r1.id
 }
 
 module "vnet_r1" {
@@ -225,6 +178,50 @@ module "vhub_connection_r1" {
   remote_virtual_network_id = module.vnet_r1.id
   virtual_hub_id = module.vhub_r1.id 
 }
+
+/*
+resource "azurerm_express_route_connection" "this_r1" {
+  name                             = "example-r1"
+  express_route_gateway_id         = module.ExR_gw_r1.id
+  express_route_circuit_peering_id = module.ExR_circuit_peering_r1.id
+}
+
+module "ExR_circuit_r1" {
+    source = "../../modules/vHubExRcircuit"
+  name                  = local.region1.ExR_circuit_name # 
+  resource_group_name   = module.resource_group.name     # "rg-dev-westus3"
+  location              = local.region1.location
+  service_provider_name = local.region1.service_provider_name
+  peering_location      = local.region1.peering_location # "Silicon Valley" # "Equinix-Silicon-Valley"
+  bandwidth_in_mbps     = 50
+  
+  # express_route_port_id = module.ExR_circuit_port.id
+  # bandwidth_in_gbps     = 10
+
+  allow_classic_operations = false
+
+    tier   = "Standard"
+    family = "MeteredData"
+
+  tags = {
+      team = "local-me"
+      environment = "local-${local.environment}"
+    }
+}
+module "ExR_circuit_peering_r1" {
+  source = "../../modules/vHubExRcircuitPeering"
+
+  peering_type                  = local.region1.peering_type
+  express_route_circuit_name    = module.ExR_circuit_r1.name
+  resource_group_name           = module.resource_group.name     # "rg-dev-westus3"
+  shared_key                    = "ItsASecret"
+  peer_asn                      = 100
+  primary_peer_address_prefix   = "192.168.1.0/30"
+  secondary_peer_address_prefix = "192.168.1.0/30"
+  vlan_id                       = 100
+  
+}
+*/
 
 locals {
     region2 = {
@@ -324,7 +321,6 @@ resource "azurerm_express_route_connection" "this_r2" {
   express_route_gateway_id         = module.ExR_gw_r2.id
   express_route_circuit_peering_id = module.ExR_circuit_peering_r2.id
 }
-
 module "vnet_r2" {
 
   source = "../../modules/network/vnet"
@@ -360,7 +356,6 @@ module "vnet_r2" {
   )
 
 }
-
 module "vhub_connection_r2" {
   source = "../../modules/vwanHubConnection"
   name = "${module.vhub_r2.name}-with-${module.vnet_r2.name}"
