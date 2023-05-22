@@ -7,6 +7,6 @@ provider "azurerm" {
 
 provider "azurerm" {
   alias           = "connectivity"
-  subscription_id = "00000000-0000-0000-0000-000000000000"
+  subscription_id = "d200e3b2-c0dc-4076-bd30-4ccccf05ffeb" # "00000000-0000-0000-0000-000000000000"
   features {}
 }

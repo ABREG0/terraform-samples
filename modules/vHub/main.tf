@@ -48,7 +48,7 @@ variable "route" {
 
 resource "azurerm_virtual_hub" "this" {
 
-  provider = azurerm.connectivity
+  # provider = azurerm.connectivity
 
 
   name                = var.name

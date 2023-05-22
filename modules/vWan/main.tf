@@ -32,7 +32,7 @@ variable "tags" {
   default     = {}
 }
 resource "azurerm_virtual_wan" "this" {
-  provider = azurerm.connectivity
+  # provider = azurerm.connectivity
 
   # Mandatory resource attributes
   name                = var.name
