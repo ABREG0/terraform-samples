@@ -1,4 +1,15 @@
 
+# variable "subnets" {
+#   type = map(object({
+#     name                                      = string
+#     route_table_id                            = string
+#     destinations_type = string
+#     destinations                         = list(string)
+#     next_hop_type                                      = string
+#     next_hop                            = string
+#   }))
+# }
+
 variable "name" {
   type        = string
   description = "(required) describe your variable"

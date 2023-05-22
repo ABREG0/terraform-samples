@@ -33,9 +33,14 @@ output "id" {
 output "name" {
   value = azurerm_virtual_hub.this.name
 }
-
 output "location" {
   value = azurerm_virtual_hub.this.location
+}
+output "resource" {
+  value = azurerm_virtual_hub.this
+}
+output "default_rt_id" {
+  value = azurerm_virtual_hub.this.default_route_table_id
 }
 variable "route" {
   type = list(object({

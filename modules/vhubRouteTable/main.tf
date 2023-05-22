@@ -15,8 +15,16 @@ variable "labels" {
   default     = ["appName"]
 }
 
-
-resource "azurerm_virtual_hub_route_table" "example" {
+output "id" {
+  value = azurerm_virtual_hub_route_table.this.id
+}
+output "name" {
+  value = azurerm_virtual_hub_route_table.this.name
+}
+output "labels" {
+  value = azurerm_virtual_hub_route_table.this.labels
+}
+resource "azurerm_virtual_hub_route_table" "this" {
   name           = var.name
   virtual_hub_id = var.virtual_hub_id
   labels         = var.labels
