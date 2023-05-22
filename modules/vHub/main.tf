@@ -67,4 +67,3 @@ resource "azurerm_virtual_hub" "this" {
         next_hop_ip_address = route.value["next_hop_ip_address"]
       }
     }
-}

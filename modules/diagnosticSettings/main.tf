@@ -16,14 +16,15 @@ variable "resource_id" {
 }
 
 data "azurerm_monitor_diagnostic_categories" "this" {
-  resource_id = var.resource_id
+  resource_id = var.resource_id 
 }
 
-variable "diagnostic_logs" {
-  type = list(string)
-  description = "Optional: logs to enabled"
-  default = ["none","AllMetrics","VMProtectionAlerts",]
-}
+# variable "logs_to_enable" {
+#   type = list(string)
+#   description = "Optional: logs to enabled"
+#   default = []
+# }
+
 resource "azurerm_monitor_diagnostic_setting" "this" {
   name                       = var.name
   target_resource_id         = var.resource_id
@@ -33,10 +34,10 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     iterator = log
     for_each = data.azurerm_monitor_diagnostic_categories.this.log_category_types
     content {
-      category = contains(var.diagnostic_logs, log.value) ? log.value : null
+      category = log.value
       retention_policy {
         days    = 30
-        enabled = contains(var.diagnostic_logs, log.value) ? true : false
+        enabled = true
       }
     }
   }
@@ -46,7 +47,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     for_each = data.azurerm_monitor_diagnostic_categories.this.metrics
     content {
       category = metric.value
-      enabled  = contains(var.diagnostic_logs, metric.value) ? true : false
+      enabled  =  metric.value != null ? true : false
       retention_policy {
         days    = 30
         enabled = true
@@ -67,4 +68,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
 
 output "diag_catgories" {
   value = data.azurerm_monitor_diagnostic_categories.this
+}
+output "logs" {
+  value = azurerm_monitor_diagnostic_setting.this
 }
