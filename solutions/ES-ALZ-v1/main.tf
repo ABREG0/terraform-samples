@@ -203,7 +203,6 @@ module "vhub_default_route_table_r1_routes" {
   next_hop_type                                      = "ResourceId"
   next_hop                            = module.vhub_connection_r1.id
 }
-
 module "ExR_circuit_r1" {
     source = "../../modules/vHubExRcircuit"
   name                  = local.region1.ExR_circuit_name # 
@@ -240,6 +239,8 @@ module "ExR_circuit_peering_r1" {
   
 }
 /*
+
+# Only resource we are going to create to connect ExR GW to Circuit.
 resource "azurerm_express_route_connection" "this_r1" {
   name                             = "example-r1"
   express_route_gateway_id         = module.ExR_gw_r1.id
