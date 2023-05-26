@@ -14,22 +14,42 @@ variable "remote_virtual_network_id" {
   default     = "westus3"
 }
 
-# variable "traffic_settings" {
-#   type = object({
-#     is_gateway_installed = optional(bool, false)
-#     config = object({
-#       hub_to_vitual_network_traffic_allowed             = optional(bool, true)
-#       vitual_network_to_hub_gateways_traffic_allowed     = optional(bool, true)
-#     })
-#   })
-# }
+variable "routing" {
+  type = map(object({
+    associated_route_table_id  = optional(string)
+    propagated_route_table = optional(list(object({
+      labels              = list(string)
+      route_table_ids              = list(string)
+      }))
+    )
+    static_vnet_route = optional(list(object({
+      name = optional(string)
+      address_prefixes              = list(string)
+      next_hop_ip_address              = list(string)
+      }))
+    )
+  }))
+}
 
 resource "azurerm_virtual_hub_connection" "this" {
-  name = var.name # "${data.azurerm_virtual_network.source.name}-with-${data.azurerm_virtual_hub.vhub.name}"
-  virtual_hub_id            = var.virtual_hub_id # data.azurerm_virtual_hub.vhub.id
+  name                      = var.name                      # "${data.azurerm_virtual_network.source.name}-with-${data.azurerm_virtual_hub.vhub.name}"
+  virtual_hub_id            = var.virtual_hub_id            # data.azurerm_virtual_hub.vhub.id
   remote_virtual_network_id = var.remote_virtual_network_id #data.azurerm_virtual_network.source.id
-  # hub_to_vitual_network_traffic_allowed = var.hub_to_vitual_network_traffic_allowed
-  # vitual_network_to_hub_gateways_traffic_allowed = var.vitual_network_to_hub_gateways_traffic_allowed
+  internet_security_enabled = false                         # var.internet_security_enabled
+
+  routing {
+    associated_route_table_id = null # (Optional) The ID of the route table associated with this Virtual Hub connection.
+
+    propagated_route_table {
+      labels          = [] #(Optional) The list of labels to assign to this route table.
+      route_table_ids = []
+    }
+    static_vnet_route {
+      name                = null # (Optional) The name which should be used for this Static Route.
+      address_prefixes    = []   # (Optional) A list of CIDR Ranges which should be used as Address Prefixes.
+      next_hop_ip_address = null
+    }
+  }
 }
 
 output "id" {

@@ -77,7 +77,7 @@ output "id" {
 
 output "name" {
   description = "The Name of the newly created vNet"
-  value       = azurerm_virtual_network.this.resource_group_name
+  value       = azurerm_virtual_network.this.name
 }
 
 output "location" {

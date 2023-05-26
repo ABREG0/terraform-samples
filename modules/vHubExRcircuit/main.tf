@@ -23,7 +23,7 @@ variable "service_provider_name" {
 variable "peering_location" {
   type        = string
   description = "(required) describe your variable"
-  default = null
+  default     = null
 }
 variable "bandwidth_in_mbps" {
   type        = number
@@ -42,9 +42,9 @@ variable "family" {
   description = "(required) describe your variable"
 }
 variable "express_route_port_id" {
-  type = string
+  type        = string
   description = "(Optional) used with bandwidth mbps"
-  default = null
+  default     = null
 }
 
 variable "tags" {
@@ -97,5 +97,5 @@ resource "azurerm_express_route_circuit" "this" {
 resource "azurerm_express_route_circuit_authorization" "this" {
   name                       = "ERCAuth-${var.name}"
   express_route_circuit_name = azurerm_express_route_circuit.this.name
-  resource_group_name   = var.resource_group_name
+  resource_group_name        = var.resource_group_name
 }

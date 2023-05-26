@@ -23,22 +23,22 @@ variable "shared_key" {
 variable "peer_asn" {
   type        = number
   description = "(required) describe your variable"
-  default = 100
+  default     = 100
 }
 variable "primary_peer_address_prefix" {
   type        = string
   description = "(required) describe your variable"
-  default = "192.168.1.0/30"
+  default     = "192.168.1.0/30"
 }
 variable "secondary_peer_address_prefix" {
   type        = string
   description = "(required) describe your variable"
-  default = "192.168.1.0/30"
+  default     = "192.168.1.0/30"
 }
 variable "vlan_id" {
   type        = number
   description = "(required) describe your variable"
-  default = 100
+  default     = 100
 }
 
 output "id" {

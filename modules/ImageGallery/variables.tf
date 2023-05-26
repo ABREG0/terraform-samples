@@ -27,8 +27,8 @@ variable "region" {
 
 variable "resource_group_name" {
   description = "Name of the Resource Group in which to deploy these resources"
-#   default     = "2"
-  default     = ""
+  #   default     = "2"
+  default = ""
 }
 
 # variable "resource_group2_name" {

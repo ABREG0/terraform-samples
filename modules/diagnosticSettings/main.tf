@@ -16,7 +16,7 @@ variable "resource_id" {
 }
 
 data "azurerm_monitor_diagnostic_categories" "this" {
-  resource_id = var.resource_id 
+  resource_id = var.resource_id
 }
 
 # variable "logs_to_enable" {
@@ -29,7 +29,7 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
   name                       = var.name
   target_resource_id         = var.resource_id
   log_analytics_workspace_id = var.log_analytics_workspace_id
-  
+
   dynamic "enabled_log" {
     iterator = log
     for_each = data.azurerm_monitor_diagnostic_categories.this.log_category_types
@@ -47,14 +47,14 @@ resource "azurerm_monitor_diagnostic_setting" "this" {
     for_each = data.azurerm_monitor_diagnostic_categories.this.metrics
     content {
       category = metric.value
-      enabled  =  metric.value != null ? true : false
+      enabled  = metric.value != null ? true : false
       retention_policy {
         days    = 30
         enabled = true
       }
     }
   }
-  
+
   lifecycle {
     ignore_changes = [
       # Ignore changes to tags, e.g. because a management agent

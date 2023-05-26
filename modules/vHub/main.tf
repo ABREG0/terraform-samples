@@ -44,10 +44,10 @@ output "default_rt_id" {
 }
 variable "route" {
   type = list(object({
-              address_prefixes    = list(string)
-              next_hop_ip_address = string
-            })
-          )
+    address_prefixes    = list(string)
+    next_hop_ip_address = string
+    })
+  )
   default = []
 }
 
@@ -61,16 +61,16 @@ resource "azurerm_virtual_hub" "this" {
   location            = var.location
   virtual_wan_id      = var.vwan_id
   address_prefix      = var.address_prefix # "10.221.224.0/24"
-  tags           = var.tags
+  tags                = var.tags
 
   # Dynamic configuration blocks
-     dynamic "route" {
-      for_each = var.route
-      content {
-        # Mandatory attributes
-        address_prefixes    = route.value["address_prefixes"]
-        next_hop_ip_address = route.value["next_hop_ip_address"]
-      }
+  dynamic "route" {
+    for_each = var.route
+    content {
+      # Mandatory attributes
+      address_prefixes    = route.value["address_prefixes"]
+      next_hop_ip_address = route.value["next_hop_ip_address"]
     }
+  }
 
 }
