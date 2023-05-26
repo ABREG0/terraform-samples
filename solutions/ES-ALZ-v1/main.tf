@@ -1,67 +1,67 @@
 
 locals {
   environment = "prod"
-  
-  vwan = {
-          vwan_id = null
 
-          vawan_name = "vwan-${local.environment}-westus3"
-          resource_group_name = "rg-vwan"
-          location            = "westus3"
-          type                = "Standard"
-         }
+  vwan = {
+    vwan_id = null
+
+    vawan_name          = "vwan-${local.environment}-westus3"
+    resource_group_name = "rg-vwan"
+    location            = "westus3"
+    type                = "Standard"
+  }
 
   region1 = {
-    name = "vhub-r1-${local.environment}-westus3"
-    location = "westus3"
+    name                  = "vhub-r1-${local.environment}-westus3"
+    location              = "westus3"
     address_prefix        = "10.21.224.0/24"
     ExR_circuit_name      = "exr-r1-${local.environment}-westus3"
     service_provider_name = "Equinix"
     peering_location      = "Silicon Valley" # "Equinix-Silicon-Valley"
     peering_type          = "AzurePrivatePeering"
     ExR_gw_name           = "exr-gw-r1-${local.environment}-westus3"
-    
+
   }
 
   tags = {
-      team = "local-me"
-      environment = "local-${local.environment}"
-    }
+    team        = "local-me"
+    environment = "local-${local.environment}"
+  }
 }
 
 module "resource_group" {
   source   = "../../modules/resourceGroup"
   name     = local.vwan.resource_group_name # "rg-dev-westus3"
-  location = local.vwan.location # "westus3"
-  
+  location = local.vwan.location            # "westus3"
+
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
   )
 }
 resource "azurerm_log_analytics_workspace" "this" {
-  name                = "law-${local.environment}-westus3"
-  resource_group_name = module.resource_group.name     # "rg-dev-westus3"
-  location            = module.resource_group.location # "westus3"
-  sku                 = "PerGB2018"
-  retention_in_days   = 30
-  internet_ingestion_enabled    = true
-  internet_query_enabled        = true
+  name                       = "law-${local.environment}-westus3"
+  resource_group_name        = module.resource_group.name     # "rg-dev-westus3"
+  location                   = module.resource_group.location # "westus3"
+  sku                        = "PerGB2018"
+  retention_in_days          = 30
+  internet_ingestion_enabled = true
+  internet_query_enabled     = true
 
 }
 locals {
   logging = flatten([
-    for value in [module.vhub_r1, module.vnet_r1,]: 
+    for value in [module.vhub_r1, module.palo_vnet_r1, ] :
     {
-      name = value.name, 
+      name = value.name,
       id   = value.id
     }
   ])
   # user_policy_pairs = flatten([
-  #   for policy, users in [module.vhub_r1, module.vnet_r1,] : [
+  #   for policy, users in [module.vhub_r1, module.palo_vnet_r1,] : [
   #     for user in users: {
   #       policy = policy
   #       user   = user
@@ -82,21 +82,20 @@ module "vwan" {
     office365_local_breakout_category = "All" # "None" # Optimize, OptimizeAndAllow, All, None 
     log_analytics_workspace_id        = null
   }
-  
+
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
   )
 }
-
 module "vhub_r1" {
   source              = "../../modules/vHub"
-  name                = local.region1.name # 
-  resource_group_name = module.resource_group.name     # "rg-dev-westus3"
-  location            = local.region1.location # "westus3"
+  name                = local.region1.name         # 
+  resource_group_name = module.resource_group.name # "rg-dev-westus3"
+  location            = local.region1.location     # "westus3"
   vwan_id             = module.vwan.id
   address_prefix      = local.region1.address_prefix
   # route = [ 
@@ -109,100 +108,199 @@ module "vhub_r1" {
   #           next_hop_ip_address = "10.20.3.10" #"vhub-dev-westus3-with-${module.vnet.name}"
   #       } 
   #   ]
-  
+
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
   )
 }
-output "default_route_table_id" {
-  value = module.vhub_r1.default_rt_id
-}
+
 module "ExR_gw_r1" {
-  source = "../../modules/vHubExRgateway"
+  source              = "../../modules/vHubExRgateway"
   name                = local.region1.ExR_gw_name
-  resource_group_name = module.resource_group.name     # "rg-dev-westus3"
+  resource_group_name = module.resource_group.name # "rg-dev-westus3"
   location            = local.region1.location
   virtual_hub_id      = module.vhub_r1.id
 
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
   )
 }
 
-module "vnet_r1" {
+module "palo_vnet_r1" {
 
-  source = "../../modules/network/vnet"
-  name                = "vnet-${local.environment}-${local.region1.location}"
-  resource_group_name = module.resource_group.name     # "rg-dev-westus3"
-  location            = local.region1.location
+  source               = "../../modules/network/vnet"
+  name                 = "vnet-palo-${local.environment}-${local.region1.location}"
+  resource_group_name  = module.resource_group.name # "rg-dev-westus3"
+  location             = local.region1.location
   address_space        = ["10.67.100.0/22", "10.67.104.0/22"] # each.value.address_space
   dns_servers          = []
   ddos_protection_plan = [] # [{ id = module.ddos.id, enable = true }, ]
-  
-  # log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
-  # diagnosticSettings = {
-  #   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
-  #   logs_to_enable = ["none","AllMetrics","VMProtectionAlerts",]
-  # }
 
   subnets = {
-  plpe = {
-    name                                      = "plpe"
-    address_prefix                            = "10.67.100.0/24"
-    service_endpoints                         = ["Microsoft.AzureActiveDirectory", "Microsoft.ContainerRegistry", "Microsoft.AzureCosmosDB", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
-    private_endpoint_network_policies_enabled = false
-    delegation                                = []
+    plpe = {
+      name                                      = "plpe"
+      address_prefix                            = "10.67.100.0/24"
+      service_endpoints                         = ["Microsoft.AzureActiveDirectory", "Microsoft.ContainerRegistry", "Microsoft.AzureCosmosDB", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
+      private_endpoint_network_policies_enabled = false
+      delegation                                = []
     },
   }
 
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
   )
 
 }
-module "vhub_connection_r1" {
-  source = "../../modules/vwanHubConnection"
-  name = "${module.vhub_r1.name}-with-${module.vnet_r1.name}"
-  remote_virtual_network_id = module.vnet_r1.id
-  virtual_hub_id = module.vhub_r1.id 
-}
-module "vhub_route_table_r1" {
-  source = "../../modules/vhubRouteTable"
-  name           = "rt-r1-${local.environment}-${local.region1.location}"
-  virtual_hub_id = module.vhub_r1.id     # "rg-dev-westus3"
-  labels         = ["rt1","pan-nva"]
-  
-}
-module "vhub_route_table_r1_routes" {
-  source = "../../modules/vhubRTroutes"
-  name           = "rt-r1-${local.environment}-${local.region1.location}"
-  route_table_id                            = module.vhub_route_table_r1.id
-  destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
-  destinations                         = ["10.0.0.0/16"]
-  next_hop_type                                      = "ResourceId"
-  next_hop                            = module.vhub_connection_r1.id
+module "palo_to_hub_conn_r1" {
+  source                    = "../../modules/vwanHubConnection"
+  name                      = "conn-${module.palo_vnet_r1.name}"
+  remote_virtual_network_id = module.palo_vnet_r1.id
+  virtual_hub_id            = module.vhub_r1.id
+  routing = {
+    rt1 = {}
+  }
 }
 module "vhub_default_route_table_r1_routes" {
-  source = "../../modules/vhubRTroutes"
-  name           = "default-rt-r1-${local.environment}-${local.region1.location}"
-  route_table_id                            = module.vhub_r1.default_rt_id
+  source            = "../../modules/vhubRTroutes"
+  name              = "default-rt-r1-${local.environment}-${local.region1.location}"
+  route_table_id    = module.vhub_r1.default_rt_id
   destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
-  destinations                         = ["10.0.0.0/24"]
-  next_hop_type                                      = "ResourceId"
-  next_hop                            = module.vhub_connection_r1.id
+  destinations      = ["10.0.0.0/24"]
+  next_hop_type     = "ResourceId"
+  next_hop          = module.palo_to_hub_conn_r1.id
 }
+
+module "AppZone0_vnet_r1" {
+
+  source               = "../../modules/network/vnet"
+  name                 = "vnet-AppZone0-${local.environment}-${local.region1.location}"
+  resource_group_name  = module.resource_group.name # "rg-dev-westus3"
+  location             = local.region1.location
+  address_space        = ["10.67.108.0/22"] # each.value.address_space
+  dns_servers          = []
+  ddos_protection_plan = [] # [{ id = module.ddos.id, enable = true }, ]
+
+  subnets = {
+    plpe = {
+      name                                      = "plpe"
+      address_prefix                            = "10.67.108.0/24"
+      service_endpoints                         = ["Microsoft.AzureActiveDirectory", "Microsoft.ContainerRegistry", "Microsoft.AzureCosmosDB", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
+      private_endpoint_network_policies_enabled = false
+      delegation                                = []
+    },
+  }
+
+  tags = merge(
+    {
+      team        = "me"
+      environment = local.environment
+    },
+    local.tags
+  )
+
+}
+module "AppZone0_to_hub_conn_r1" {
+  source                    = "../../modules/vwanHubConnection"
+  name                      = "conn-${module.AppZone0_vnet_r1.name}"
+  remote_virtual_network_id = module.AppZone0_vnet_r1.id
+  virtual_hub_id            = module.vhub_r1.id
+  routing = {
+    rt1 = {}
+  }
+}
+module "AppZone0_route_table_r1" {
+  source         = "../../modules/vhubRouteTable"
+  name           = "rt-AppZone0-r1-${local.environment}-${local.region1.location}"
+  virtual_hub_id = module.vhub_r1.id # "rg-dev-westus3"
+  labels         = ["AppZone0"]
+
+}
+module "AppZone0_route_table_r1_routes" {
+  source            = "../../modules/vhubRTroutes"
+  name              = "routes-AppZone0-r1-${local.environment}-${local.region1.location}"
+  route_table_id    = module.AppZone0_route_table_r1.id
+  destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
+  destinations      = ["10.0.0.0/16"]
+  next_hop_type     = "ResourceId"
+  next_hop          = module.AppZone0_to_hub_conn_r1.id
+}
+
+module "AppZone1_vnet_r1" {
+
+  source               = "../../modules/network/vnet"
+  name                 = "vnet-AppZone1-${local.environment}-${local.region1.location}"
+  resource_group_name  = module.resource_group.name # "rg-dev-westus3"
+  location             = local.region1.location
+  address_space        = ["10.67.112.0/22"] # each.value.address_space
+  dns_servers          = []
+  ddos_protection_plan = [] # [{ id = module.ddos.id, enable = true }, ]
+
+  subnets = {
+    plpe = {
+      name                                      = "plpe"
+      address_prefix                            = "10.67.112.0/24"
+      service_endpoints                         = ["Microsoft.AzureActiveDirectory", "Microsoft.ContainerRegistry", "Microsoft.AzureCosmosDB", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
+      private_endpoint_network_policies_enabled = false
+      delegation                                = []
+    },
+  }
+
+  tags = merge(
+    {
+      team        = "me"
+      environment = local.environment
+    },
+    local.tags
+  )
+
+}
+module "AppZone1_to_hub_conn_r1" {
+  source                    = "../../modules/vwanHubConnection"
+  name                      = "conn-${module.AppZone1_vnet_r1.name}"
+  remote_virtual_network_id = module.AppZone1_vnet_r1.id
+  virtual_hub_id            = module.vhub_r1.id
+  routing = {
+    rt1 = {}
+  }
+}
+module "AppZone1_route_table_r1" {
+  source         = "../../modules/vhubRouteTable"
+  name           = "rt-AppZone1-r1-${local.environment}-${local.region1.location}"
+  virtual_hub_id = module.vhub_r1.id # "rg-dev-westus3"
+  labels         = ["AppZone1"]
+}
+module "AppZone1_route_table_r1_routes" {
+  source            = "../../modules/vhubRTroutes"
+  name              = "routes-AppZone1-r1-${local.environment}-${local.region1.location}"
+  route_table_id    = module.AppZone0_route_table_r1.id
+  destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
+  destinations      = ["10.0.0.0/16"]
+  next_hop_type     = "ResourceId"
+  next_hop          = module.AppZone1_to_hub_conn_r1.id
+}
+
+/*
+
+# Only resource we are going to create to connect ExR GW to Circuit.
+# ExR_id and Peering ID provided by customer
+resource "azurerm_express_route_connection" "this_r1" {
+  name                             = "example-r1"
+  express_route_gateway_id         = module.ExR_gw_r1.id
+  express_route_circuit_peering_id = module.ExR_circuit_peering_r1.id
+}
+
 module "ExR_circuit_r1" {
     source = "../../modules/vHubExRcircuit"
   name                  = local.region1.ExR_circuit_name # 
@@ -238,22 +336,12 @@ module "ExR_circuit_peering_r1" {
   vlan_id                       = 100
   
 }
-/*
-
-# Only resource we are going to create to connect ExR GW to Circuit.
-resource "azurerm_express_route_connection" "this_r1" {
-  name                             = "example-r1"
-  express_route_gateway_id         = module.ExR_gw_r1.id
-  express_route_circuit_peering_id = module.ExR_circuit_peering_r1.id
-}
-
-
 */
 
 locals {
-    region2 = {
-    name = "vhub-r2-${local.environment}-westus"
-    location = "westus"
+  region2 = {
+    name                  = "vhub-r2-${local.environment}-westus"
+    location              = "westus"
     address_prefix        = "10.221.224.0/24"
     ExR_circuit_name      = "exr-r2-${local.environment}-westus"
     service_provider_name = "Equinix"
@@ -261,13 +349,13 @@ locals {
     peering_type          = "AzurePrivatePeering"
     ExR_gw_name           = "exr-gw-r2-${local.environment}-westus"
   }
-  
+
 }
 module "vhub_r2" {
   source              = "../../modules/vHub"
-  name                = local.region2.name # 
-  resource_group_name = module.resource_group.name     # "rg-dev-westus3"
-  location            = local.region2.location # "westus3"
+  name                = local.region2.name         # 
+  resource_group_name = module.resource_group.name # "rg-dev-westus3"
+  location            = local.region2.location     # "westus3"
   vwan_id             = module.vwan.id
   address_prefix      = local.region2.address_prefix
   # route = [ 
@@ -280,10 +368,10 @@ module "vhub_r2" {
   #           next_hop_ip_address = "10.20.20.10" #"vhub-dev-westus3-with-${module.vnet.name}"
   #       } 
   #   ]
-  
+
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
@@ -292,15 +380,15 @@ module "vhub_r2" {
 }
 
 module "ExR_gw_r2" {
-  source = "../../modules/vHubExRgateway"
+  source              = "../../modules/vHubExRgateway"
   name                = local.region2.ExR_gw_name
-  resource_group_name = module.resource_group.name     # "rg-dev-westus3"
-  location            = local.region2.location # "westus3"
+  resource_group_name = module.resource_group.name # "rg-dev-westus3"
+  location            = local.region2.location     # "westus3"
   virtual_hub_id      = module.vhub_r2.id
 
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
@@ -308,33 +396,33 @@ module "ExR_gw_r2" {
 }
 module "vnet_r2" {
 
-  source = "../../modules/network/vnet"
-  name                = "vnet-${local.environment}-${local.region2.location}"
-  resource_group_name = module.resource_group.name     # "rg-dev-westus3"
-  location            = local.region2.location # "westus3"
+  source               = "../../modules/network/vnet"
+  name                 = "vnet-${local.environment}-${local.region2.location}"
+  resource_group_name  = module.resource_group.name           # "rg-dev-westus3"
+  location             = local.region2.location               # "westus3"
   address_space        = ["10.67.200.0/22", "10.67.204.0/22"] # each.value.address_space
   dns_servers          = []
   ddos_protection_plan = [] # [{ id = module.ddos.id, enable = true }, ]
-  
+
   # log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
   # diagnosticSettings = {
   #   log_analytics_workspace_id = azurerm_log_analytics_workspace.this.id
   #   logs_to_enable = ["none","AllMetrics","VMProtectionAlerts",]
   # }
-  
+
   subnets = {
-  plpe = {
-    name                                      = "plpe"
-    address_prefix                            = "10.67.200.0/24"
-    service_endpoints                         = ["Microsoft.AzureActiveDirectory", "Microsoft.ContainerRegistry", "Microsoft.AzureCosmosDB", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
-    private_endpoint_network_policies_enabled = false
-    delegation                                = []
+    plpe = {
+      name                                      = "plpe"
+      address_prefix                            = "10.67.200.0/24"
+      service_endpoints                         = ["Microsoft.AzureActiveDirectory", "Microsoft.ContainerRegistry", "Microsoft.AzureCosmosDB", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
+      private_endpoint_network_policies_enabled = false
+      delegation                                = []
     },
   }
 
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
@@ -342,42 +430,45 @@ module "vnet_r2" {
 
 }
 module "vhub_connection_r2" {
-  source = "../../modules/vwanHubConnection"
-  name = "${module.vhub_r2.name}-with-${module.vnet_r2.name}"
+  source                    = "../../modules/vwanHubConnection"
+  name                      = "${module.vhub_r2.name}-with-${module.vnet_r2.name}"
   remote_virtual_network_id = module.vnet_r2.id
-  virtual_hub_id = module.vhub_r2.id 
+  virtual_hub_id            = module.vhub_r2.id
+  routing = {
+    rt1 = {}
+  }
 }
 module "vhub_route_table_r2" {
-  source = "../../modules/vhubRouteTable"
+  source         = "../../modules/vhubRouteTable"
   name           = "rt-r2-${local.environment}-${local.region2.location}"
-  virtual_hub_id = module.vhub_r2.id     # "rg-dev-westus3"
-  labels         = ["rt2","pan-nva"]
-  
+  virtual_hub_id = module.vhub_r2.id # "rg-dev-westus3"
+  labels         = ["rt2", "pan-nva"]
+
 }
 module "vhub_route_table_r2_routes" {
-  source = "../../modules/vhubRTroutes"
-  name           = "rt-r2-${local.environment}-${local.region1.location}"
-  route_table_id                            = module.vhub_route_table_r2.id
+  source            = "../../modules/vhubRTroutes"
+  name              = "rt-r2-${local.environment}-${local.region1.location}"
+  route_table_id    = module.vhub_route_table_r2.id
   destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
-  destinations                         = ["10.0.0.0/16"]
-  next_hop_type                                      = "ResourceId"
-  next_hop                            = module.vhub_connection_r2.id
+  destinations      = ["10.0.0.0/16"]
+  next_hop_type     = "ResourceId"
+  next_hop          = module.vhub_connection_r2.id
 }
 module "vhub_default_route_table_r2_routes" {
-  source = "../../modules/vhubRTroutes"
-  name           = "default-rt-r2-${local.environment}-${local.region1.location}"
-  route_table_id                            = module.vhub_r2.default_rt_id
+  source            = "../../modules/vhubRTroutes"
+  name              = "default-rt-r2-${local.environment}-${local.region1.location}"
+  route_table_id    = module.vhub_r2.default_rt_id
   destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
-  destinations                         = ["10.0.0.0/24"]
-  next_hop_type                                      = "ResourceId"
-  next_hop                            = module.vhub_connection_r2.id
+  destinations      = ["10.0.0.0/24"]
+  next_hop_type     = "ResourceId"
+  next_hop          = module.vhub_connection_r2.id
 }
 
 module "ExR_circuit_r2" {
-    source = "../../modules/vHubExRcircuit"
-  name                = local.region2.ExR_circuit_name # 
-  resource_group_name = module.resource_group.name     # "rg-dev-westus3"
-  location            = local.region2.location
+  source                = "../../modules/vHubExRcircuit"
+  name                  = local.region2.ExR_circuit_name # 
+  resource_group_name   = module.resource_group.name     # "rg-dev-westus3"
+  location              = local.region2.location
   service_provider_name = local.region2.service_provider_name
   peering_location      = local.region2.peering_location # "Silicon Valley" # "Equinix-Silicon-Valley"
   bandwidth_in_mbps     = 50
@@ -387,12 +478,12 @@ module "ExR_circuit_r2" {
 
   allow_classic_operations = false
 
-    tier   = "Standard"
-    family = "MeteredData"
+  tier   = "Standard"
+  family = "MeteredData"
 
   tags = merge(
     {
-      team = "me"
+      team        = "me"
       environment = local.environment
     },
     local.tags
@@ -403,13 +494,13 @@ module "ExR_circuit_peering_r2" {
 
   peering_type                  = local.region2.peering_type
   express_route_circuit_name    = module.ExR_circuit_r2.name
-  resource_group_name           = module.resource_group.name     # "rg-dev-westus3"
+  resource_group_name           = module.resource_group.name # "rg-dev-westus3"
   shared_key                    = "ItsASecret"
   peer_asn                      = 100
   primary_peer_address_prefix   = "192.168.1.0/30"
   secondary_peer_address_prefix = "192.168.1.0/30"
   vlan_id                       = 100
-  
+
 }
 
 /*

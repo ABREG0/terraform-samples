@@ -23,12 +23,12 @@ variable "peering_location" {
 variable "bandwidth_in_mbps" {
   type        = number
   description = "(required) describe your variable"
-  default = 10
+  default     = 10
 }
 variable "encapsulation" {
   type        = string
   description = "(required) describe your variable"
-  default = "Dot1Q"
+  default     = "Dot1Q"
 }
 output "id" {
   value = azurerm_express_route_port.this.id
@@ -56,12 +56,12 @@ resource "azurerm_express_route_port" "this" {
   name                = var.name
   resource_group_name = var.resource_group_name
   location            = var.location
-  peering_location    = var.peering_location 
+  peering_location    = var.peering_location
   bandwidth_in_gbps   = 10
   encapsulation       = var.encapsulation
 }
 resource "azurerm_express_route_port_authorization" "this" {
   name                    = "ERCAuth-${var.name}"
   express_route_port_name = azurerm_express_route_port.this.name
-  resource_group_name = var.resource_group_name
+  resource_group_name     = var.resource_group_name
 }

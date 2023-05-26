@@ -43,8 +43,8 @@ resource "azurerm_virtual_wan" "this" {
   disable_vpn_encryption            = var.settings.disable_vpn_encryption                                                                              # true 
   allow_branch_to_branch_traffic    = var.settings.allow_branch_to_branch_traffic                                                                      # false 
   office365_local_breakout_category = var.settings.office365_local_breakout_category == null ? "None" : var.settings.office365_local_breakout_category # "None" # Optimize, OptimizeAndAllow, All, None 
-  type                              = var.type  
-  tags = var.tags                                                                                                       # "Standard" # "Basic"
+  type                              = var.type
+  tags                              = var.tags # "Standard" # "Basic"
 }
 output "id" {
   value = azurerm_virtual_wan.this.id
