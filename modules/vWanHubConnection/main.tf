@@ -37,17 +37,18 @@ resource "azurerm_virtual_hub_connection" "this" {
   remote_virtual_network_id = var.remote_virtual_network_id #data.azurerm_virtual_network.source.id
   internet_security_enabled = false                         # var.internet_security_enabled
 
+  
   routing {
-    associated_route_table_id = null # (Optional) The ID of the route table associated with this Virtual Hub connection.
+    associated_route_table_id = var.routing.associated_route_table_id == null ? null : var.routing.associated_route_table_id # (Optional) The ID of the route table associated with this Virtual Hub connection.
 
     propagated_route_table {
-      labels          = [] #(Optional) The list of labels to assign to this route table.
-      route_table_ids = []
+      labels          = var.routing.propagated_route_table.labels == [] ? [] : var.routing.propagated_route_table.labels #(Optional) The list of labels to assign to this route table.
+      route_table_ids = var.routing.propagated_route_table.route_table_ids == [] ? [] : var.routing.propagated_route_table.route_table_ids
     }
     static_vnet_route {
-      name                = null # (Optional) The name which should be used for this Static Route.
-      address_prefixes    = []   # (Optional) A list of CIDR Ranges which should be used as Address Prefixes.
-      next_hop_ip_address = null
+      name                = var.routing.static_vnet_route.name == null ? null : var.routing.static_vnet_route.name # (Optional) The name which should be used for this Static Route.
+      address_prefixes    = var.routing.static_vnet_route.address_prefixes == [] ? [] : var.routing.static_vnet_route.address_prefixes  # (Optional) A list of CIDR Ranges which should be used as Address Prefixes.
+      next_hop_ip_address = var.routing.static_vnet_route.next_hop_ip_address == null ? null : var.routing.static_vnet_route.next_hop_ip_address
     }
   }
 }
