@@ -232,7 +232,7 @@ module "AppZone0_route_table_r1_routes" {
   name              = "routes-AppZone0-r1-${local.environment}-${local.region1.location}"
   route_table_id    = module.AppZone0_route_table_r1.id
   destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
-  destinations      = ["10.0.0.0/16"]
+  destinations      = ["10.10.0.0/16"]
   next_hop_type     = "ResourceId"
   next_hop          = module.AppZone0_to_hub_conn_r1.id
 }
@@ -284,9 +284,9 @@ module "AppZone1_route_table_r1" {
 module "AppZone1_route_table_r1_routes" {
   source            = "../../modules/vhubRTroutes"
   name              = "routes-AppZone1-r1-${local.environment}-${local.region1.location}"
-  route_table_id    = module.AppZone0_route_table_r1.id
+  route_table_id    = module.AppZone1_route_table_r1.id
   destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
-  destinations      = ["10.0.0.0/16"]
+  destinations      = ["10.11.0.0/16"]
   next_hop_type     = "ResourceId"
   next_hop          = module.AppZone1_to_hub_conn_r1.id
 }
@@ -397,7 +397,7 @@ module "ExR_gw_r2" {
 module "vnet_r2" {
 
   source               = "../../modules/network/vnet"
-  name                 = "vnet-${local.environment}-${local.region2.location}"
+  name                 = "vnet-palo-${local.environment}-${local.region2.location}"
   resource_group_name  = module.resource_group.name           # "rg-dev-westus3"
   location             = local.region2.location               # "westus3"
   address_space        = ["10.67.200.0/22", "10.67.204.0/22"] # each.value.address_space
