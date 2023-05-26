@@ -30,4 +30,4 @@ override.tf.json
 # example: *tfplan*
 *.tfplan 
 solutions/ES-ALZ/provider.tf
-**/*/*/provider.tf
+**/**/provider.*
