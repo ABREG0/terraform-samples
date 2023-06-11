@@ -29,7 +29,7 @@ variable "container" {
       cpu    = "0.5"
       memory = "0.5"
       ports = [{
-        port     = null 
+        port     = null
         protocol = null
         }
       ]
@@ -82,7 +82,7 @@ resource "azurerm_container_group" "cg" {
         for_each = container.value.ports
 
         content {
-          port     = ports.value.port 
+          port     = ports.value.port
           protocol = ports.value.protocol
         }
       }

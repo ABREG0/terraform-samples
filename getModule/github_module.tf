@@ -2,8 +2,8 @@
 # repo gets downloade to \.terraform\modules\abrego_modules
 module "abrego" {
   source = "github.com/ABREG0/terraform-samples/providers" #"github.com/ABREG0/ps-examples" - the module tf file are inside "providers" folder
-#   var_one = "foo"
-#   var_two = "bar"
+  #   var_one = "foo"
+  #   var_two = "bar"
 }
 
 module "sentinel" {

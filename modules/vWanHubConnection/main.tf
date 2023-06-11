@@ -21,44 +21,44 @@ locals {
   empty_map    = {}
   empty_string = ""
 }
-# variable "routing" {
-#   type = list(object({
-#     associated_route_table_id  = optional(string)
-#     propagated_route_table = optional(object({
-#       labels               = list(string)
-#       route_table_ids      = list(string)
-#       })
-#     )
-#     static_vnet_route = optional(object({
-#       name                = optional(string)
-#       address_prefixes    = list(string)
-#       next_hop_ip_address = list(string)
-#       })
-#     )
-#   }))
-#   default = [ {
-#                 associated_route_table_id = null
-#                 propagated_route_table = {
-#                   labels = []
-#                   route_table_ids = []
-#                   }
-#                 static_vnet_route = {
-#                   name   = null
-#                   address_prefixes = []
-#                   next_hop_ip_address = []
-#                   }
-#                } 
-#             ]
-# }
+variable "routing" {
+  type = list(object({
+    associated_route_table_id  = optional(string)
+    propagated_route_table = optional(object({
+      labels               = list(string)
+      route_table_ids      = list(string)
+      })
+    )
+    static_vnet_route = optional(object({
+      name                = optional(string)
+      address_prefixes    = list(string)
+      next_hop_ip_address = list(string)
+      })
+    )
+  }))
+  default = [ {
+                associated_route_table_id = null
+                propagated_route_table = {
+                  labels = []
+                  route_table_ids = []
+                  }
+                static_vnet_route = {
+                  name   = null
+                  address_prefixes = []
+                  next_hop_ip_address = []
+                  }
+               } 
+            ]
+}
 
 resource "azurerm_virtual_hub_connection" "this" {
   name                      = var.name                      # "${data.azurerm_virtual_network.source.name}-with-${data.azurerm_virtual_hub.vhub.name}"
   virtual_hub_id            = var.virtual_hub_id            # data.azurerm_virtual_hub.vhub.id
   remote_virtual_network_id = var.remote_virtual_network_id #data.azurerm_virtual_network.source.id
   internet_security_enabled = false                         # var.internet_security_enabled
+
+  # Dynamic configuration blocks
   
-    # Dynamic configuration blocks
-  /*
   dynamic "routing" {
     for_each = var.routing
     content {
@@ -83,7 +83,7 @@ resource "azurerm_virtual_hub_connection" "this" {
       }
     }
   }
-  */
+  
 }
 
 output "id" {

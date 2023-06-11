@@ -166,7 +166,7 @@ module "palo_to_hub_conn_r1" {
   name                      = "conn-${module.palo_vnet_r1.name}"
   remote_virtual_network_id = module.palo_vnet_r1.id
   virtual_hub_id            = module.vhub_r1.id
-  
+
   # routing = [
   #   {
   #     # associated_route_table_id = module.vhub_default_route_table_r1_routes.id
@@ -181,4 +181,16 @@ module "vhub_default_route_table_r1_routes" {
   destinations      = ["10.0.0.0/24"]
   next_hop_type     = "ResourceId"
   next_hop          = module.palo_to_hub_conn_r1.id
+}
+module "AppZone0_route_table_r1" {
+  source         = "../../modules/vhubRouteTable"
+  name           = "rt-AppZone0-r1-${local.environment}-${local.region1.location}"
+  virtual_hub_id = module.vhub_r1.id # "rg-dev-westus3"
+  labels         = ["AppZone0"]
+}
+module "AppZone1_route_table_r1" {
+  source         = "../../modules/vhubRouteTable"
+  name           = "rt-AppZone1-r1-${local.environment}-${local.region1.location}"
+  virtual_hub_id = module.vhub_r1.id # "rg-dev-westus3"
+  labels         = ["AppZone1"]
 }

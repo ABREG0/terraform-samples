@@ -168,7 +168,7 @@ module "palo_to_hub_conn_r1" {
   name                      = "conn-${module.palo_vnet_r1.name}"
   remote_virtual_network_id = module.palo_vnet_r1.id
   virtual_hub_id            = module.vhub_r1.id
-  
+
   # routing = [
   #   {
   #     # associated_route_table_id = module.vhub_default_route_table_r1_routes.id
@@ -219,7 +219,7 @@ module "AppZone0_to_hub_conn_r1" {
   name                      = "conn-${module.AppZone0_vnet_r1.name}"
   remote_virtual_network_id = module.AppZone0_vnet_r1.id
   virtual_hub_id            = module.vhub_r1.id
-  
+
   # routing = [
   #   {
   #     associated_route_table_id = module.vhub_default_route_table_r1_routes.id
@@ -277,7 +277,7 @@ module "AppZone1_to_hub_conn_r1" {
   name                      = "conn-${module.AppZone1_vnet_r1.name}"
   remote_virtual_network_id = module.AppZone1_vnet_r1.id
   virtual_hub_id            = module.vhub_r1.id
-  
+
   # routing = [
   #   {
   #     associated_route_table_id = module.vhub_default_route_table_r1_routes.id

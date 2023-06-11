@@ -30,7 +30,7 @@ locals {
 }
 
 data "azurerm_resource_group" "this" {
-  name     = local.vwan.resource_group_name 
+  name = local.vwan.resource_group_name
 }
 /*
   locals {
@@ -51,51 +51,9 @@ data "azurerm_resource_group" "this" {
     # ])
   }
 */
-data "azurerm_virtual_hub" "this"  {
-  name                = local.region1.name 
+data "azurerm_virtual_hub" "this" {
+  name                = local.region1.name
   resource_group_name = data.azurerm_resource_group.this.name
-}
-
-module "palo_vnet_r1" {
-
-  source               = "../../modules/network/vnet"
-  name                 = "vnet-palo-${local.environment}-${local.region1.location}"
-  resource_group_name  = data.azurerm_resource_group.this.name
-  location             = data.azurerm_resource_group.this.local
-  address_space        = ["10.67.100.0/22"] 
-  dns_servers          = []
-  ddos_protection_plan = [] 
-
-  subnets = {
-    plpe = {
-      name                                      = "plpe"
-      address_prefix                            = "10.67.100.0/24"
-      service_endpoints                         = ["Microsoft.AzureActiveDirectory", "Microsoft.ContainerRegistry", "Microsoft.AzureCosmosDB", "Microsoft.EventHub", "Microsoft.KeyVault", "Microsoft.Sql", "Microsoft.Storage", "Microsoft.Web"]
-      private_endpoint_network_policies_enabled = false
-      delegation                                = []
-    },
-  }
-
-  tags = merge(
-    {
-      team        = "me"
-      environment = local.environment
-    },
-    local.tags
-  )
-
-}
-module "palo_to_hub_conn_r1" {
-  source                    = "../../modules/vwanHubConnection"
-  name                      = "conn-${module.palo_vnet_r1.name}"
-  remote_virtual_network_id = module.palo_vnet_r1.id
-  virtual_hub_id            = data.azurerm_virtual_hub.this.id
-  
-  # routing = [
-  #   {
-  #     # associated_route_table_id = data.azurerm_virtual_hub.this.default_route_table_id
-  #   }
-  # ]
 }
 
 module "AppZone0_vnet_r1" {
@@ -103,10 +61,10 @@ module "AppZone0_vnet_r1" {
   source               = "../../modules/network/vnet"
   name                 = "vnet-AppZone0-${local.environment}-${local.region1.location}"
   resource_group_name  = data.azurerm_resource_group.this.name
-  location             = data.azurerm_resource_group.this.local
+  location             = data.azurerm_resource_group.this.location
   address_space        = ["10.67.108.0/22"]
   dns_servers          = []
-  ddos_protection_plan = [] 
+  ddos_protection_plan = []
 
   subnets = {
     plpe = {
@@ -129,45 +87,44 @@ module "AppZone0_vnet_r1" {
 }
 data "azurerm_virtual_hub_route_table" "AppZone0" {
   name                = "rt-AppZone0-r1-${local.environment}-${local.region1.location}"
-  resource_group_name       = data.azurerm_resource_group.this.name
-  virtual_hub_name          = data.azurerm_virtual_hub.this.name
+  resource_group_name = data.azurerm_resource_group.this.name
+  virtual_hub_name    = data.azurerm_virtual_hub.this.name
 }
 data "azurerm_virtual_network" "AppZone0" {
-  name = module.AppZone0_vnet_r1.name
+  name                = module.AppZone0_vnet_r1.name
   resource_group_name = data.azurerm_resource_group.this.name
+  depends_on = [ module.AppZone0_vnet_r1 ]
 }
-module "AppZone0_to_hub_conn_r1" {
-  source                    = "../../modules/vwanHubConnection"
-  name                      = "conn-${data.azurerm_virtual_network.AppZone0.name}"
-  remote_virtual_network_id = data.azurerm_virtual_network.AppZone0.id
-  virtual_hub_id            = data.azurerm_virtual_hub.this.id
-  
-  # routing = [
-  #   {
-  #     associated_route_table_id = module.vhub_default_route_table_r1_routes.id
-  #   }
-  # ]
-}
+# module "AppZone0_to_hub_conn_r1" {
+#   source                    = "../../modules/vwanHubConnection"
+#   name                      = "conn-${data.azurerm_virtual_network.AppZone0.name}"
+#   remote_virtual_network_id = data.azurerm_virtual_network.AppZone0.id
+#   virtual_hub_id            = data.azurerm_virtual_hub.this.id
 
-module "AppZone0_route_table_r1_routes" {
-  source            = "../../modules/vhubRTroutes"
-  name              = "routes-AppZone0-r1-${local.environment}-${local.region1.location}"
-  route_table_id    = data.azurerm_virtual_hub_route_table.AppZone0.id
-  destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
-  destinations      = ["10.10.0.0/16"]
-  next_hop_type     = "ResourceId"
-  next_hop          = module.AppZone0_to_hub_conn_r1.id
-}
-
+#   # routing = [
+#   #   {
+#   #     associated_route_table_id = module.vhub_default_route_table_r1_routes.id
+#   #   }
+#   # ]
+# }
+# module "AppZone0_route_table_r1_routes" {
+#   source            = "../../modules/vhubRTroutes"
+#   name              = "routes-AppZone0-r1-${local.environment}-${local.region1.location}"
+#   route_table_id    = data.azurerm_virtual_hub_route_table.AppZone0.id
+#   destinations_type = "CIDR" # "CIDR" , "ResourceId" , "Service"
+#   destinations      = ["10.10.0.0/16"]
+#   next_hop_type     = "ResourceId"
+#   next_hop          = module.AppZone0_to_hub_conn_r1.id
+# }
 module "AppZone1_vnet_r1" {
 
   source               = "../../modules/network/vnet"
   name                 = "vnet-AppZone1-${local.environment}-${local.region1.location}"
   resource_group_name  = data.azurerm_resource_group.this.name
-  location             = data.azurerm_resource_group.this.local
-  address_space        = ["10.67.112.0/22"] 
+  location             = data.azurerm_resource_group.this.location
+  address_space        = ["10.67.112.0/22"]
   dns_servers          = []
-  ddos_protection_plan = [] 
+  ddos_protection_plan = []
 
   subnets = {
     plpe = {
@@ -189,20 +146,21 @@ module "AppZone1_vnet_r1" {
 
 }
 data "azurerm_virtual_hub_route_table" "AzppZone1" {
-  name                = "rt-AzppZone1-r1-${local.environment}-${local.region1.location}"
-  resource_group_name       = data.azurerm_resource_group.this.name
-  virtual_hub_name          = data.azurerm_virtual_hub.this.name
+  name                = "rt-AppZone1-r1-${local.environment}-${local.region1.location}"
+  resource_group_name = data.azurerm_resource_group.this.name
+  virtual_hub_name    = data.azurerm_virtual_hub.this.name
 }
 data "azurerm_virtual_network" "AppZone1" {
-  name = module.AppZone1_vnet_r1.name
+  name                = module.AppZone1_vnet_r1.name
   resource_group_name = data.azurerm_resource_group.this.name
+  depends_on = [ module.AppZone1_vnet_r1 ]
 }
 module "AppZone1_to_hub_conn_r1" {
   source                    = "../../modules/vwanHubConnection"
   name                      = "conn-${module.AppZone1_vnet_r1.name}"
   remote_virtual_network_id = data.azurerm_virtual_network.AppZone1.id
   virtual_hub_id            = data.azurerm_virtual_hub.this.id
-  
+
   # routing = [
   #   {
   #     associated_route_table_id = data.azurerm_virtual_hub_route_table.AzppZone1.id
