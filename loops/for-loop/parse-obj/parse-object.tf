@@ -1,6 +1,6 @@
 locals {
   parse_object = { for top_index, top_value in {
-    for k, v in var.object : k => "${k} = ${v}"
+    for k, v in var.object : k => "${k} = ${v}" if v != null
 
     }  : "cmk" => top_value...
                 
@@ -23,6 +23,6 @@ variable "object" {
     keyId = "key_resource_id"
     uami = "uami_id"
     name  = "name"
-    version = "version"
+    version = null
   }
 }
