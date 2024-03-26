@@ -1,17 +1,35 @@
 
 locals {
-  retentions_retention_weekly = { for top_key in flatten([
-    for kk, kv in var.retentions : [
+  flatten_at_top = flatten([
+      for index_key, value in var.retentions : 
+         value
+    ])
+  #   ]) : "${top_key.count}-${top_key.weekdays}" => top_key }
+
+  backup_config = flatten([
+    for index_key, value in local.flatten_at_top : 
+    
+      value["backup"]
+  
+    ] )
+  retention_weekly = flatten([
+    for index_key, value in local.flatten_at_top : 
+    
+      value["retention_weekly"]
+  
+    ] )
+retentions_retention_weekly = flatten([ for top_key in flatten([
+    for index_key, kv in var.retentions : [
       for rk, rv in kv.retention_weekly : {
         rk  = rk
-        count         = kk
+        count         = index_key
         weekdays          = rk
       }
     ]
-  ]) : "${top_key.weekdays}" => top_key } #   ]) : "${top_key.count}-${top_key.weekdays}" => top_key }
+  ]) :  top_key ]) #   ]) : "${top_key.count}-${top_key.weekdays}" => top_key }
 
   parsin_retation = { for top_key, top_values in flatten([
-    for kk, kv in var.retentions : [
+    for index_key, kv in var.retentions : [
        kv.backup,
     #    "retention_daily = ${kv.retention_daily}"
     ]
@@ -21,7 +39,7 @@ locals {
         }
   } #   ]) : "${top_key.count}-${top_key.weekdays}" => top_key }
   get_backup = [ for top_key, top_values in flatten([
-    for kk, kv in var.retentions : [
+    for index_key, kv in var.retentions : [
        kv.backup,
     #    "retention_daily = ${kv.retention_daily}"
     ]
@@ -30,15 +48,22 @@ locals {
 
 }
 
+# output "flatten_at_top" {
+#   value = local.flatten_at_top
+# }
+output "backup_flatten" {
+  value = local.backup_config
+}
 output "retention_weekly" {
-  value = local.retentions_retention_weekly
+  value = local.retention_weekly
 }
-output "parsin_retation" {
-  value = local.parsin_retation
-}
-output "get_backup" {
-  value = local.get_backup
-}
+# output "parsin_retation" {
+#   value = local.parsin_retation
+# }
+# output "get_backup" {
+#   value = local.get_backup
+# }
+
 variable "retentions" {
   type = map(object({
     backup = object({
