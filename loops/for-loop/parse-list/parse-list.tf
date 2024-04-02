@@ -8,7 +8,10 @@ locals {
   parse_list_make_list = [for key_index, value in var.list_string: "index[${key_index}]=value[${value}]"]
   list_to_set = toset(local.parse_list_make_list) # no need to do this because the above result is the same
   # remove 'first' from list
-  filter_first_string_out = [for key_index, value in var.list_string: "index[${key_index}]=value[${value}]" if value != "first"]
+  filter_first_string_out = [for key_index, value in var.list_string: 
+                              "index[${key_index}]=value[${value}]" 
+                              if value != "first"
+                              ]
   # remove 'first' from list
   filter_only_keep_sunday = [for key_index, value in var.list_string: "index[${key_index}]=value[${value}]" if value == "sunday"]
 
