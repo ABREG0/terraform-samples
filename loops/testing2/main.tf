@@ -1,14 +1,15 @@
 
 locals {
     workload_policy = { for top_key in flatten([
-        for kk, kv in var.workload_policy : [
-        kv.protection_policy
-        ]
+        for kk, kv in var.workload_policy : {
+        kk = kv
+        }
     ]) : "policy" => top_key ...} #   ]) : "${top_key.count}-${top_key.weekdays}" => top_key }
     protection_policy = { for top_key in flatten([
         for kk, kv in local.workload_policy : [
         kv
         ]
+        # if local.workload_policy.policy.workload_type == "SQLDataBase"
     ])  : "protection" => top_key ...}
 }
 
