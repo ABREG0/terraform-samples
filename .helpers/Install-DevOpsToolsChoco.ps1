@@ -138,6 +138,16 @@ choco install terraform -y --force --force-dependencies
 choco install googlechrome -y --force --force-dependencies
 
 choco install tflint -y --force --force-dependencies
+
+choco install terraform-docs -y --force --force-dependencies
+# docker run --rm --volume "$(pwd):/terraform-docs" -u $(id -u) quay.io/terraform-docs/terraform-docs:0.18.0 markdown /terraform-docs
+# docker run --rm --volume "$(pwd):/terraform-docs" -u $(id -u) quay.io/terraform-docs/terraform-docs:0.18.0 markdown /terraform-docs > doc.md
+
+choco install python --pre -y --force --force-dependencies
+
+cmd /c pip install checkov
+
+
 & refreshenv
 
 
