@@ -137,6 +137,7 @@ choco install terraform -y --force --force-dependencies
 
 choco install googlechrome -y --force --force-dependencies
 
+choco install tflint -y --force --force-dependencies
 & refreshenv
 
 
