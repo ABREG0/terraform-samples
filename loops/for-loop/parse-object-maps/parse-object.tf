@@ -8,7 +8,7 @@ locals {
         weekdays          = rk
       }
     ]
-  ]) : "${top_key.weekdays}" => top_key } #   ]) : "${top_key.count}-${top_key.weekdays}" => top_key }
+  ]) : "${top_key.weekdays}" => top_key ... } #   ]) : "${top_key.count}-${top_key.weekdays}" => top_key }
 
   parsin_retation = { for top_key, top_values in flatten([
     for kk, kv in var.retentions : [
@@ -18,7 +18,7 @@ locals {
   ]) : "backup" => {
         "topkey" = top_key
         "topValue" = top_values
-        }
+        } ...
   } #   ]) : "${top_key.count}-${top_key.weekdays}" => top_key }
   get_backup = [ for top_key, top_values in flatten([
     for kk, kv in var.retentions : [
@@ -71,33 +71,63 @@ variable "retentions" {
     }), {})
   }))
   default = {
-   pol =  {
-        backup = {
-            frequency     = "Hourly"
-            time          = "22:00"
-            hour_interval = 6
-            hour_duration = 12
-            weekdays      = ["Tuesday", "Saturday"]
-        }
-        retention_daily = 7
+    pol =  {
+          backup = {
+              frequency     = "Hourly"
+              time          = "22:00"
+              hour_interval = 6
+              hour_duration = 12
+              weekdays      = ["Tuesday", "Saturday"]
+          }
+          retention_daily = 7
 
-        retention_weekly = {
-                count    = 7
-                weekdays = ["Monday", "Wednesday"]
-        }
-        retention_monthly = {
-                count = 5
-                weekdays =  ["Tuesday","Saturday"]
-                weeks = ["First","Third"]
-                days = [3, 10, 20]
-        }
-                retention_yearly = {
-                count  = 5
-                months = []
-                weekdays =  ["Tuesday","Saturday"]
-                weeks = ["First","Third"]
-                days = [3, 10, 20]
-        }
+          retention_weekly = {
+                  count    = 7
+                  weekdays = ["Monday", "Wednesday"]
+          }
+          retention_monthly = {
+                  count = 5
+                  weekdays =  ["Tuesday","Saturday"]
+                  weeks = ["First","Third"]
+                  days = [3, 10, 20]
+          }
+                  retention_yearly = {
+                  count  = 5
+                  months = []
+                  weekdays =  ["Tuesday","Saturday"]
+                  weeks = ["First","Third"]
+                  days = [3, 10, 20]
+          }
     }
+    pol2 =  {
+          backup = {
+              frequency     = "Hourly"
+              time          = "22:00"
+              hour_interval = 6
+              hour_duration = 12
+              weekdays      = ["Tuesday", "Saturday"]
+          }
+          retention_daily = 7
+
+          retention_weekly = {
+                  count    = 7
+                  weekdays = ["Monday", "Wednesday"]
+          }
+          retention_monthly = {
+                  count = 5
+                  weekdays =  ["Tuesday","Saturday"]
+                  weeks = ["First","Third"]
+                  days = [3, 10, 20]
+          }
+                  retention_yearly = {
+                  count  = 5
+                  months = []
+                  weekdays =  ["Tuesday","Saturday"]
+                  weeks = ["First","Third"]
+                  days = [3, 10, 20]
+          }
+    }
+    
   }
+  
 }
