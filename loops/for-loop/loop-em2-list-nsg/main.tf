@@ -1,16 +1,10 @@
 locals {
-    resource_groups = [
-     for rg_key, rg_value in var.hub_connection :
-        {  
-            resource_group_name = rg_key
-            location = rg_value.location
-            tags = rg_value.tags
-        }
-    # for item_key, item_value in var.hub_connection : 
-    # item_key => item_key # item_value.resources
+    resource_groups = {
+    for item_key, item_value in var.hub_connection : 
+    item_key => item_key # item_value.resources
     # if resource.west_fw_shared_wus2 &&
     # contains(["connectivity", "ddos", "dns"], resource.west_fw_shared_wus2)
-    ]
+    }
 
     # object variable to list
     flats = { for top_key, top_value in [
@@ -73,20 +67,6 @@ locals {
                 "rt" = rg_value.resources.route_tables
         }
     }
-    creating_nested_objects_rt2 = flatten([
-        for rg_key, rg_value in var.hub_connection :
-        [ 
-            for rt_key, rt_value in rg_value.resources.route_tables: {
-                resource_group_name = rg_key
-                virtual_network_name = rg_value.resources.virtual_networks.name
-                location = rg_value.location
-                name = rt_value.name
-                rules = rt_value.rules
-                # tags = rg_value.tags
-                # "rt" = rg_value.resources.route_tables
-                }
-        ]
-    ])
     creating_nested_objects_subnets = {
         for rg_key, rg_value in var.hub_connection :
         rg_key => {  
@@ -114,29 +94,20 @@ locals {
     }
 }
 
-    output "creating_nested_objects_rt" {
-      value = [for kk, kv in local.creating_nested_objects_rt2 : kv
-            # {
-            # kk = kv
-            # } 
-        ]
-    }
-/*
     output "local_resource_groups" {
-    value = [for kk, kv in local.resource_groups : kv
-            # {
-            # kk = kv
-            # } 
-        ]
+    value = local.resource_groups
+    }
+    output "creating_nested_objects_rt" {
+      value = local.creating_nested_objects_rt
     }
     output "creating_nested_objects_nsg" {
-      value = [for kk, kv in local.creating_nested_objects_nsg : kv.nsg
-            # {
-            # kk = kv
-            # } 
-        ]
+      value = {for kk, kv in local.creating_nested_objects_nsg : 
+           kk => [
+                kv
+            ]
+        }
     }
-
+/*
     output "creating_nested_objects_subnets" {
       value = {for kk, kv in local.creating_nested_objects_subnets : 
            kk => kv  
