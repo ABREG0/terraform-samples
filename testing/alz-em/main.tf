@@ -1,5 +1,8 @@
 
-
+# resource "azurerm_subnet_route_table_association" "example" {
+#   subnet_id      = azurerm_subnet.example.id
+#   route_table_id = azurerm_route_table.example.id
+# }
 
 # This is required for resource modules
 resource "azurerm_resource_group" "this_my" {
@@ -15,16 +18,136 @@ resource "azurerm_resource_group" "this_my2" {
   location = each.value.location
   name     = format("%s-${each.value.resource_group_name}", "v2-")
 }
+locals {
+  nsg_id = {for kk, kv in azurerm_network_security_group.this : 
+                "${kv.name}" => {
+                    "name" = kv.name
+                    "id" = kv.id
+                }
+  }
+}
+
+    #Defining the first virtual network (vnet-1) with its subnets and settings.
+    module "vnet1" {
+        depends_on = [ azurerm_resource_group.this_my, azurerm_resource_group.this_my2 ]
+        for_each = local.creating_nested_objects_vnets2 # {for kk, kv in local.creating_nested_objects_vnets2 : kk => kv }
+        source              = "Azure/avm-res-network-virtualnetwork/azurerm"
+        location            = each.value.location
+        name                = each.value.vnets.name
+        resource_group_name = each.value.resource_group_name
+
+        address_space = each.value.vnets.virtual_network_address_space
+
+        dns_servers = {
+            dns_servers = ["8.8.8.8"]
+        }
+        flow_timeout_in_minutes = 30
+
+        subnets = each.value.vnets.subnets
+            /*{
+                subnet0 = {
+                    name                            = "subnet1"
+                    default_outbound_access_enabled = false
+                    #sharing_scope                   = "Tenant"  #NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/EnableSharedVNet
+                    address_prefixes = ["10.150.192.0/24", "10.150.193.0/24"]
+                }
+                # subnet1 = {
+                #     name                            = "${module.naming.subnet.name_unique}1"
+                #     address_prefixes                = ["192.168.1.0/24"]
+                #     default_outbound_access_enabled = false
+                #     delegation = [{
+                #         name = "Microsoft.Web.serverFarms"
+                #         service_delegation = {
+                #         name = "Microsoft.Web/serverFarms"
+                #         }
+                #     }]
+                #     nat_gateway = {
+                #         id = azurerm_nat_gateway.this.id
+                #     }
+                #     network_security_group = {
+                #         id = azurerm_network_security_group.https.id
+                #     }
+                #     route_table = {
+                #         id = azurerm_route_table.this.id
+                #     }
+                #     service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
+                #     service_endpoint_policies = {
+                #         policy1 = {
+                #         id = azurerm_subnet_service_endpoint_storage_policy.this.id
+                #         }
+                #     }
+                #     role_assignments = {
+                #         role1 = {
+                #         principal_id               = azurerm_user_assigned_identity.this.principal_id
+                #         role_definition_id_or_name = "Contributor"
+                #         }
+                # }
+            
+            }*/
+    /*
+
+        ddos_protection_plan = {
+            id = azurerm_network_ddos_protection_plan.this.id
+            # due to resource cost
+            enable = false
+        }
+
+        role_assignments = {
+            role1 = {
+            principal_id               = azurerm_user_assigned_identity.this.principal_id
+            role_definition_id_or_name = "Contributor"
+            }
+        }
+
+        enable_vm_protection = true
+
+        encryption = {
+            enabled = true
+            #enforcement = "DropUnencrypted"  # NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/AllowDropUnecryptedVnet
+            enforcement = "AllowUnencrypted"
+        }
+
+        diagnostic_settings = {
+            sendToLogAnalytics = {
+            name                           = "sendToLogAnalytics"
+            workspace_resource_id          = azurerm_log_analytics_workspace.this.id
+            log_analytics_destination_type = "Dedicated"
+            }
+        }
+     */
+    }
 
     #Creating a Route Table with a unique name in the specified location.
     resource "azurerm_route_table" "this" {
+        depends_on = [ azurerm_resource_group.this_my, azurerm_resource_group.this_my2 ]
         for_each = {for kk, kv in local.creating_nested_objects_rt2 : kk => kv
         }
-        # [local.creating_nested_objects_rt2]
-    location            = each.value.location
-    name                = each.value.name
-    resource_group_name = each.value.resource_group_name
+        location            = each.value.location
+        name                = each.value.name
+        resource_group_name = each.value.resource_group_name
     }
+
+    resource "azurerm_network_security_group" "this" {
+        depends_on = [ azurerm_resource_group.this_my, azurerm_resource_group.this_my2 ]
+        for_each = {for kk, kv in local.creating_nested_objects_nsg2 : kk => kv
+        }
+        location            = each.value.location
+        name                = each.value.name
+        resource_group_name = each.value.resource_group_name
+
+        security_rule {
+            access                     = "Allow"
+            destination_address_prefix = "*"
+            destination_port_range     = "443"
+            direction                  = "Inbound"
+            name                       = "AllowInboundHTTPS"
+            priority                   = 100
+            protocol                   = "Tcp"
+            source_address_prefix      =  "10.2.3.1" # jsondecode(data.http.public_ip.response_body).ip
+            source_port_range          = "*"
+        }
+    }
+
 
 
     ## Section to provide a random Azure region for the resource group
@@ -73,25 +196,6 @@ resource "azurerm_resource_group" "this_my2" {
     method = "GET"
     url    = "http://api.ipify.org?format=json"
     }
-
-    resource "azurerm_network_security_group" "https" {
-    location            = azurerm_resource_group.this.location
-    name                = module.naming.network_security_group.name_unique
-    resource_group_name = azurerm_resource_group.this.name
-
-    security_rule {
-        access                     = "Allow"
-        destination_address_prefix = "*"
-        destination_port_range     = "443"
-        direction                  = "Inbound"
-        name                       = "AllowInboundHTTPS"
-        priority                   = 100
-        protocol                   = "Tcp"
-        source_address_prefix      = jsondecode(data.http.public_ip.response_body).ip
-        source_port_range          = "*"
-    }
-    }
-
     resource "azurerm_user_assigned_identity" "this" {
     location            = azurerm_resource_group.this.location
     name                = module.naming.user_assigned_identity.name_unique
@@ -126,92 +230,6 @@ resource "azurerm_resource_group" "this_my2" {
     location            = azurerm_resource_group.this.location
     name                = module.naming.log_analytics_workspace.name_unique
     resource_group_name = azurerm_resource_group.this.name
-    }
-
-    #Defining the first virtual network (vnet-1) with its subnets and settings.
-    module "vnet1" {
-    source              = "Azure/avm-res-network-virtualnetwork/azurerm"
-    resource_group_name = azurerm_resource_group.this.name
-    location            = azurerm_resource_group.this.location
-    name                = module.naming.virtual_network.name_unique
-
-    address_space = ["192.168.0.0/16"]
-
-    dns_servers = {
-        dns_servers = ["8.8.8.8"]
-    }
-
-    ddos_protection_plan = {
-        id = azurerm_network_ddos_protection_plan.this.id
-        # due to resource cost
-        enable = false
-    }
-
-    role_assignments = {
-        role1 = {
-        principal_id               = azurerm_user_assigned_identity.this.principal_id
-        role_definition_id_or_name = "Contributor"
-        }
-    }
-
-    enable_vm_protection = true
-
-    encryption = {
-        enabled = true
-        #enforcement = "DropUnencrypted"  # NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/AllowDropUnecryptedVnet
-        enforcement = "AllowUnencrypted"
-    }
-
-    flow_timeout_in_minutes = 30
-
-    subnets = {
-        subnet0 = {
-        name                            = "${module.naming.subnet.name_unique}0"
-        default_outbound_access_enabled = false
-        #sharing_scope                   = "Tenant"  #NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/EnableSharedVNet
-        address_prefixes = ["192.168.0.0/24", "192.168.2.0/24"]
-        }
-        subnet1 = {
-        name                            = "${module.naming.subnet.name_unique}1"
-        address_prefixes                = ["192.168.1.0/24"]
-        default_outbound_access_enabled = false
-        delegation = [{
-            name = "Microsoft.Web.serverFarms"
-            service_delegation = {
-            name = "Microsoft.Web/serverFarms"
-            }
-        }]
-        nat_gateway = {
-            id = azurerm_nat_gateway.this.id
-        }
-        network_security_group = {
-            id = azurerm_network_security_group.https.id
-        }
-        route_table = {
-            id = azurerm_route_table.this.id
-        }
-        service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
-        service_endpoint_policies = {
-            policy1 = {
-            id = azurerm_subnet_service_endpoint_storage_policy.this.id
-            }
-        }
-        role_assignments = {
-            role1 = {
-            principal_id               = azurerm_user_assigned_identity.this.principal_id
-            role_definition_id_or_name = "Contributor"
-            }
-        }
-        }
-    }
-
-    diagnostic_settings = {
-        sendToLogAnalytics = {
-        name                           = "sendToLogAnalytics"
-        workspace_resource_id          = azurerm_log_analytics_workspace.this.id
-        log_analytics_destination_type = "Dedicated"
-        }
-    }
     }
 
     module "vnet2" {

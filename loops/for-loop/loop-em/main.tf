@@ -53,6 +53,17 @@ locals {
                 "vnets" = rg_value.resources.virtual_networks
         }
     }
+    creating_nested_objects_vnets2 = {
+        for rg_key, rg_value in var.hub_connection :
+        rg_key => {  
+                resource_group_name = rg_key
+                location = rg_value.location
+                tags = rg_value.tags
+                "vnets" = rg_value.resources.virtual_networks
+        }
+    }
+    
+    
     creating_nested_objects_nsg = {
         for rg_key, rg_value in var.hub_connection :
         rg_key => {  
@@ -113,17 +124,24 @@ locals {
         } : "topKey" =>  rgV...
     }
 }
-
-    output "creating_nested_objects_rt" {
-      value = [for kk, kv in local.creating_nested_objects_rt2 : kv
+output "creating_nested_objects_vnets2" {
+      value = [for kk, kv in local.creating_nested_objects_vnets2 : kv
             # {
             # kk = kv
             # } 
         ]
     }
+    
 /*
     output "local_resource_groups" {
     value = [for kk, kv in local.resource_groups : kv
+            # {
+            # kk = kv
+            # } 
+        ]
+    }
+    output "creating_nested_objects_rt" {
+      value = [for kk, kv in local.creating_nested_objects_rt2 : kv
             # {
             # kk = kv
             # } 
