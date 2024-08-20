@@ -258,7 +258,8 @@ Install-AzureCLI
 Write-host "Installing Azure az Module"
 Install-azModule
 
-
+Write-host "Install TFLINT"
+# choco install tflint
 
 
 
