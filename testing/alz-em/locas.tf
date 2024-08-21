@@ -1,23 +1,25 @@
 locals {
     
+    nsg_id = {for kk, kv in azurerm_network_security_group.this : 
+                "${kv.name}" => {
+                    "name" = kv.name
+                    "id" = kv.id
+                }
+    }
+    rt_id = {for kk, kv in azurerm_route_table.this : 
+                "${kv.name}" => {
+                    "name" = kv.name
+                    "id" = kv.id
+                }
+    }
     creating_nested_objects_vnets2 = {
         for rg_key, rg_value in var.hub_connection :
         rg_key => {  
                 resource_group_name = rg_key
                 location = rg_value.location
+                namespace = rg_value.namespace
                 tags = rg_value.tags
                 "vnets" = rg_value.resources.virtual_networks
-        }
-    }
-    
-    creating_nested_objects_rt = {
-        for top_key, top_value in var.hub_connection :
-        top_key => {  
-                resource_group_name = top_key
-                virtual_network_name = top_value.resources.virtual_networks.name
-                location = top_value.location
-                tags = top_value.tags
-                "rt" = top_value.resources.route_tables
         }
     }
     
@@ -26,6 +28,7 @@ locals {
         [ 
             for key, value in top_value.resources.route_tables: {
                 resource_group_name = top_key
+                namespace = top_value.namespace
                 virtual_network_name = top_value.resources.virtual_networks.name
                 location = top_value.location
                 name = value.name
@@ -39,6 +42,7 @@ locals {
         [ 
             for key, value in top_value.resources.network_security_groups: {
                 resource_group_name = top_key
+                namespace = top_value.namespace
                 virtual_network_name = top_value.resources.virtual_networks.name
                 location = top_value.location
                 name = value.name
@@ -121,6 +125,16 @@ locals {
                 "nsg" = top_value.resources.network_security_groups
         }
     }
+    creating_nested_objects_rt = {
+        for top_key, top_value in var.hub_connection :
+        top_key => {  
+                resource_group_name = top_key
+                virtual_network_name = top_value.resources.virtual_networks.name
+                location = top_value.location
+                tags = top_value.tags
+                "rt" = top_value.resources.route_tables
+        }
+    }
     creating_nested_objects_subnets = {
         for top_key, top_value in var.hub_connection :
         top_key => {  
@@ -128,7 +142,17 @@ locals {
                 virtual_network_name = top_value.resources.virtual_networks.name
                 location = top_value.location
                 tags = top_value.tags
-                "subnets" = top_value.resources.virtual_networks.subnets
+                "subnets" = {
+                                         for top_key, top_value in top_value.resources.virtual_networks.subnets:
+                                            top_key => {
+                                                name             = top_value.name
+                                                address_prefixes = top_value.address_prefixes
+                                                nsg_id = {for kk, kv in azurerm_network_security_group.this :
+                                                                        "id" => kv.id...
+                                                                        if kv.name == top_value.name
+                                                                    }
+                                            }
+                                        }
         }
     }
 

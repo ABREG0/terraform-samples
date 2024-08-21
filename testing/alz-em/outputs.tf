@@ -2,18 +2,23 @@
 output "nsg_id" {
   value = local.nsg_id
 }
-output "module_vnet1" {
-  value = {for kk, kv in module.vnet1 : 
-            "${kv.name}" => {
-                "name" = kv.name
-                "resource_id" = kv.resource_id
-                "subnets" = kv.subnets
-                #kv.resource.body.properties.id
-            }
-  }
-
+output "rt_id" {
+  value = local.rt_id
+}
+output "creating_nested_objects_subnets" {
+  value = local.creating_nested_objects_subnets
 }
 /*
+    output "module_vnet1" {
+    value = {for kk, kv in module.vnet1 : 
+                "${kv.name}" => {
+                    "name" = kv.name
+                    "resource_id" = kv.resource_id
+                    "subnets" = kv.subnets
+                    #kv.resource.body.properties.id
+                }
+    }
+    }
     output "azurerm_network_security_group" {
     value = {for kk, kv in azurerm_network_security_group.this : 
                 "${kv.name}" => {

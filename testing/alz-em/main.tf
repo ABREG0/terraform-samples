@@ -18,18 +18,10 @@ resource "azurerm_resource_group" "this_my2" {
   location = each.value.location
   name     = format("%s-${each.value.resource_group_name}", "v2-")
 }
-locals {
-  nsg_id = {for kk, kv in azurerm_network_security_group.this : 
-                "${kv.name}" => {
-                    "name" = kv.name
-                    "id" = kv.id
-                }
-  }
-}
 
     #Defining the first virtual network (vnet-1) with its subnets and settings.
     module "vnet1" {
-        depends_on = [ azurerm_resource_group.this_my, azurerm_resource_group.this_my2 ]
+        depends_on = [ azurerm_resource_group.this_my, azurerm_network_security_group.this, azurerm_route_table.this, ]
         for_each = local.creating_nested_objects_vnets2 # {for kk, kv in local.creating_nested_objects_vnets2 : kk => kv }
         source              = "Azure/avm-res-network-virtualnetwork/azurerm"
         location            = each.value.location
@@ -119,20 +111,20 @@ locals {
 
     #Creating a Route Table with a unique name in the specified location.
     resource "azurerm_route_table" "this" {
-        depends_on = [ azurerm_resource_group.this_my, azurerm_resource_group.this_my2 ]
+        depends_on = [ azurerm_resource_group.this_my,  ]
         for_each = {for kk, kv in local.creating_nested_objects_rt2 : kk => kv
         }
         location            = each.value.location
-        name                = each.value.name
+        name                = format("%s-${each.value.name}", "${each.value.namespace}-rt")
         resource_group_name = each.value.resource_group_name
     }
 
     resource "azurerm_network_security_group" "this" {
-        depends_on = [ azurerm_resource_group.this_my, azurerm_resource_group.this_my2 ]
+        depends_on = [ azurerm_resource_group.this_my,  ]
         for_each = {for kk, kv in local.creating_nested_objects_nsg2 : kk => kv
         }
         location            = each.value.location
-        name                = each.value.name
+        name                =  each.value.name #format("%s-${each.value.name}", "${each.value.namespace}-nsg")
         resource_group_name = each.value.resource_group_name
 
         security_rule {
@@ -147,8 +139,6 @@ locals {
             source_port_range          = "*"
         }
     }
-
-
 
     ## Section to provide a random Azure region for the resource group
     # This allows us to randomize the region for the resource group.
