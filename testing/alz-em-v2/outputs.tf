@@ -1,16 +1,18 @@
-
-# output "nsg_id" {
-#   value = local.nsg_id["fw_ew_trust-test-wus2-001"].id
-# }
-# output "rt_id" {
-#   value = local.rt_id
-# }
-# output "creating_nested_objects_subnets" {
-#   value = {for kk, kv in local.creating_nested_objects_nsg2 : kv.name => kv["fw_ew_trust-test-wus2-001"].id}
-# }
-output "associate" {
+output "nsg_by_id" {
   value = azurerm_network_security_group.this["fw_ew_trust-test-wus2-001"].id
 }
+output "nsg_id" {
+  value = local.nsg_id["fw_ew_trust-test-wus2-001"].id
+}
+# # output "rt_id" {
+# #   value = local.rt_id
+# # }
+# output "creating_nested_objects_subnets" {
+#   value = {for kk, kv in local.creating_nested_objects_nsg2 : kv.name => kv}
+# }
+# output "associate" {
+#   value = azurerm_network_security_group.this
+# }
 /*
     output "module_vnet1" {
     value = {for kk, kv in module.vnet1 : 
