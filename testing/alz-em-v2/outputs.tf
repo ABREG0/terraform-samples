@@ -1,8 +1,8 @@
 output "nsg_by_id" {
-  value = azurerm_network_security_group.this["fw_ew_trust-test-wus2-001"].id
+  value = azurerm_network_security_group.this["nsg-fw_ew_trust-test-wus2-001"].id
 }
-output "nsg_id" {
-  value = local.nsg_id["fw_ew_trust-test-wus2-001"].id
+output "vnet_module" {
+  value = module.vnet1["ohemr-vnet-hub_fw-shared-wus2-002"].subnets["GatewaySubnet"].resource_id
 }
 # # output "rt_id" {
 # #   value = local.rt_id

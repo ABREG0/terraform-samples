@@ -10,7 +10,9 @@ variable "hub_connection" {
         subnets = optional(map(object({
             name                            = string
             address_prefixes                   = list(string)
-            additional_service_endpoints    = optional(list(string))
+            nsg_key= optional(string)
+            rt_key= optional(string)
+            additional_service_endpoints       = optional(list(string))
             default_outbound_access_enabled = optional(bool, true)
             enable_private_link_support     = optional(bool, false)
             # resource_group_name             = string
@@ -67,13 +69,17 @@ variable "hub_connection" {
                         name = "GatewaySubnet"
                         address_prefixes = ["10.150.193.0/24",]
                         }
-                        "fw_ew_trust-shared-wus2-001" = {
-                            name             = "fw_ew_trust-shared-wus2-001"
+                        "snet-fw_ew_trust-shared-wus2-001" = {
+                            name             = "snet-fw_ew_trust-shared-wus2-001"
                             address_prefixes = ["10.150.192.0/26",]
+                            nsg_key = "nsg-fw_ew_trust-shared-wus2-001"
+                            rt_key = "rt-fw_ew_trust-shared-wus2-001"
                         }
-                        "fw_ew_trust-test-wus2-001" = {
-                            name             = "fw_ew_trust-test-wus2-001"
+                        "snet-fw_ew_trust-test-wus2-001" = {
+                            name             = "snet-fw_ew_trust-test-wus2-001"
                             address_prefixes = ["10.150.192.64/26",]
+                            nsg_key = "nsg-fw_ew_trust-test-wus2-001"
+                            rt_key = "rt-fw_ew_trust-test-wus2-001"
                         }
                         # {
                         #     name             = "fw_ew_trust-backhaul-wus2-001"
@@ -120,16 +126,16 @@ variable "hub_connection" {
               }
             }
             network_security_groups = {
-                fw_ew_trust-shared-wus2-001 = {
-                name                = "fw_ew_trust-shared-wus2-001"
+                nsg-fw_ew_trust-shared-wus2-001 = {
+                name                = "nsg-fw_ew_trust-shared-wus2-001"
                 },
-                fw_ew_trust-test-wus2-001 = {
-                name                = "fw_ew_trust-test-wus2-001"
+                nsg-fw_ew_trust-test-wus2-001 = {
+                name                = "nsg-fw_ew_trust-test-wus2-001"
                 }
             }
             route_tables = {
-                fw_ew_trust-shared-wus2-001 = {name                = "fw_ew_trust-shared-wus2-001"}
-                fw_ew_trust-test-wus2-001 = {name                = "fw_ew_trust-test-wus2-001"}
+                rt-fw_ew_trust-shared-wus2-001 = {name                = "rt-fw_ew_trust-shared-wus2-001"}
+                rt-fw_ew_trust-test-wus2-001 = {name                = "rt-fw_ew_trust-test-wus2-001"}
             }
             public_ip = {
                 pip1 =  {
@@ -166,13 +172,17 @@ variable "hub_connection" {
                     name = "GatewaySubnet"
                     address_prefixes = ["10.150.193.0/24",]
                     }
-                    "fw_ew_trust-shared-wus3-001" = {
-                        name             = "fw_ew_trust-shared-wus3-001"
+                    "snet-fw_ew_trust-shared-wus3-001" = {
+                        name             = "snet-fw_ew_trust-shared-wus3-001"
                         address_prefixes = ["10.150.192.0/26",]
+                            nsg_key = "nsg-fw_ew_trust-shared-wus3-001"
+                            rt_key = "rt-fw_ew_trust-shared-wus3-001"
                     }
-                    "fw_ew_trust-test-wus3-001" = {
-                        name             = "fw_ew_trust-test-wus3-001"
+                    "snet-fw_ew_trust-test-wus3-001" = {
+                        name             = "snet-fw_ew_trust-test-wus3-001"
                         address_prefixes = ["10.150.192.64/26",]
+                            nsg_key = "nsg-fw_ew_trust-test-wus3-001"
+                            rt_key = "rt-fw_ew_trust-test-wus3-001"
                     }
                     # {
                     #     name             = "fw_ew_trust-backhaul-wus3-001"
@@ -219,16 +229,16 @@ variable "hub_connection" {
               }
             }
             network_security_groups = {
-                fw_ew_trust-shared-wus3-001 = {
-                name                = "fw_ew_trust-shared-wus3-001"
+                nsg-fw_ew_trust-shared-wus3-001 = {
+                name                = "nsg-fw_ew_trust-shared-wus3-001"
                 },
-                fw_ew_trust-test-wus3-001 = {
-                name                = "fw_ew_trust-test-wus3-001"
+                nsg-fw_ew_trust-test-wus3-001 = {
+                name                = "nsg-fw_ew_trust-test-wus3-001"
                 }
             }
             route_tables = {
-                fw_ew_trust-shared-wus3-001 = {name                = "fw_ew_trust-shared-wus3-001"}
-                fw_ew_trust-test-wus3-001 = {name                = "fw_ew_trust-test-wus3-001"}
+                rt-fw_ew_trust-shared-wus3-001 = {name                = "rt-fw_ew_trust-shared-wus3-001"}
+                rt-fw_ew_trust-test-wus3-001 = {name                = "rt-fw_ew_trust-test-wus3-001"}
             }
             public_ip = {
                 pip1 =  {

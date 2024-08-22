@@ -22,20 +22,21 @@ resource "azurerm_resource_group" "this_my2" {
     #Defining the first virtual network (vnet-1) with its subnets and settings.
     module "vnet1" {
         depends_on = [ azurerm_resource_group.this_my, azurerm_network_security_group.this, azurerm_route_table.this, ]
-        for_each = local.creating_nested_objects_vnets2 # {for kk, kv in local.creating_nested_objects_vnets2 : kk => kv }
+        for_each = {for kk, kv in local.creating_nested_objects_vnets2 : kv.name => kv
+        } #local.creating_nested_objects_vnets2 # {for kk, kv in local.creating_nested_objects_vnets2 : kk => kv }
         source              = "Azure/avm-res-network-virtualnetwork/azurerm"
         location            = each.value.location
-        name                = each.value.vnets.name
+        name                = each.value.name
         resource_group_name = each.value.resource_group_name
 
-        address_space = each.value.vnets.virtual_network_address_space
+        address_space = each.value.virtual_network_address_space
 
         dns_servers = {
             dns_servers = ["8.8.8.8"]
         }
         flow_timeout_in_minutes = 30
 
-        subnets = each.value.vnets.subnets
+        subnets = each.value.subnets
             /*{
                 subnet0 = {
                     name                            = "subnet1"

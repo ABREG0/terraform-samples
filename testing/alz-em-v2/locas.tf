@@ -33,7 +33,7 @@ locals {
             for key, value in top_value.resources.route_tables: {
                 resource_group_name = top_key
                 namespace = top_value.namespace
-                virtual_network_name = top_value.resources.virtual_networks.name
+                # virtual_network_name = top_value.resources.virtual_networks.name
                 location = top_value.location
                 name = value.name
                 rules = value.rules
@@ -47,7 +47,7 @@ locals {
             for key, value in top_value.resources.network_security_groups: {
                 resource_group_name = top_key
                 namespace = top_value.namespace
-                virtual_network_name = top_value.resources.virtual_networks.name
+                # virtual_network_name = top_value.resources.virtual_networks.name
                 location = top_value.location
                 name = value.name
                 rules = value.rules
@@ -90,7 +90,7 @@ locals {
               ] : "${top_key}" => top_value
     }
 
-    creating_nested_objects = {
+    creating_nested_objects_resources = {
         for top_key, top_value in var.hub_connection :
         top_key => {  
             for k, v in top_value.resources: k => {
@@ -123,7 +123,7 @@ locals {
         for top_key, top_value in var.hub_connection :
         top_key => {  
                 resource_group_name = top_key
-                virtual_network_name = top_value.resources.virtual_networks.name
+                # virtual_network_name = top_value.resources.virtual_networks.name
                 location = top_value.location
                 tags = top_value.tags
                 "nsg" = top_value.resources.network_security_groups
@@ -133,12 +133,13 @@ locals {
         for top_key, top_value in var.hub_connection :
         top_key => {  
                 resource_group_name = top_key
-                virtual_network_name = top_value.resources.virtual_networks.name
+                # virtual_network_name = top_value.resources.virtual_networks.name
                 location = top_value.location
                 tags = top_value.tags
                 "rt" = top_value.resources.route_tables
         }
     }
+    /*
     creating_nested_objects_subnets = {
         for top_key, top_value in var.hub_connection :
         top_key => {  
@@ -159,8 +160,8 @@ locals {
                                         }
         }
     }
-
-    subnets = { for subnet in var.hub_connection.ohemr-rg-core_fw-shared-wus2-002.resources.virtual_networks.subnets : subnet.name => subnet }
+    */
+    # subnets = { for subnet in var.hub_connection.ohemr-rg-core_fw-shared-wus2-002.resources.virtual_networks.subnets : subnet.name => subnet }
 
     vnets = [ for rgK, rgV in var.hub_connection : {
       for res_k, res_v in rgV.resources.virtual_networks : #{res_k = res_v} 
