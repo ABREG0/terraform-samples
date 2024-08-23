@@ -52,17 +52,17 @@ variable "hub_connection" {
   })
  )
  default = {
-    ohemr-rg-core_fw-shared-wus2-002 = {
+    ohmr-rg-core_fw-shared-wus2-002 = {
         location = "westus2"
-        namespace = "ohemr"
+        namespace = "ohmr"
         tags = {
                 "Environment"      = "nprd"
                 }
         resources = {
-            # resource_group_name = "ohemr-rg-core_fw-shared-wus2-002"            
+            # resource_group_name = "ohmr-rg-core_fw-shared-wus2-002"            
             virtual_networks = {
-                ohemr-vnet-hub_fw-shared-wus2-002 = {
-                    name = "ohemr-vnet-hub_fw-shared-wus2-002"
+                ohmr-vnet-hub_fw-shared-wus2-002 = {
+                    name = "ohmr-vnet-hub_fw-shared-wus2-002"
                     virtual_network_address_space = ["10.50.192.0/23", "10.50.194.0/25"]
                     subnets = {
                         "GatewaySubnet" = {
@@ -139,14 +139,14 @@ variable "hub_connection" {
             }
             public_ip = {
                 pip1 =  {
-                    name                = "ohemr-pip-wus2-002" # "ohemr-snet-fw_ew_trust-shared-wus2-001"
+                    name                = "ohmr-pip-wus2-002" # "ohmr-snet-fw_ew_trust-shared-wus2-001"
                     # resource_group_name = each.value.resources.resource_group_name
                     # location            = each.value.location
                     allocation_method   = "Static"
                     sku                 = "Standard"
                 }
                 pip2 =  {
-                    name                = "ohemr-pip-wus2-003" # "ohemr-snet-fw_ew_trust-shared-wus2-001"
+                    name                = "ohmr-pip-wus2-003" # "ohmr-snet-fw_ew_trust-shared-wus2-001"
                     # resource_group_name = each.value.resources.resource_group_name
                     # location            = each.value.location
                     allocation_method   = "Static"
@@ -156,16 +156,16 @@ variable "hub_connection" {
             }
         }
     }
-    ohemr-rg-core_fw-shared-wus3-003 = {
+    ohmr-rg-core_fw-shared-wus3-003 = {
         location = "westus3"
-        namespace = "ohemr"
+        namespace = "ohmr"
         tags = {
                 "Environment"      = "nprd"
                 }
         resources = {
-            # resource_group_name = "ohemr-rg-core_fw-shared-wus3-003"            
+            # resource_group_name = "ohmr-rg-core_fw-shared-wus3-003"            
             virtual_networks = {
-               ohemr-vnet-hub_fw-shared-wus3-003 = {name = "ohemr-vnet-hub_fw-shared-wus3-003"
+               ohmr-vnet-hub_fw-shared-wus3-003 = {name = "ohmr-vnet-hub_fw-shared-wus3-003"
                 virtual_network_address_space = ["10.150.192.0/23", "10.150.194.0/25"]
                 subnets = {
                     "GatewaySubnet" = {
@@ -242,14 +242,14 @@ variable "hub_connection" {
             }
             public_ip = {
                 pip1 =  {
-                    name                = "ohemr-pip-wus3-003" # "ohemr-snet-fw_ew_trust-shared-wus2-001"
+                    name                = "ohmr-pip-wus3-003" # "ohmr-snet-fw_ew_trust-shared-wus2-001"
                     # resource_group_name = each.value.resources.resource_group_name
                     # location            = each.value.location
                     allocation_method   = "Static"
                     sku                 = "Standard"
                 }
                 pip2 =  {
-                    name                = "ohemr-pip-wus3-004" # "ohemr-snet-fw_ew_trust-shared-wus2-001"
+                    name                = "ohmr-pip-wus3-004" # "ohmr-snet-fw_ew_trust-shared-wus2-001"
                     # resource_group_name = each.value.resources.resource_group_name
                     # location            = each.value.location
                     allocation_method   = "Static"
