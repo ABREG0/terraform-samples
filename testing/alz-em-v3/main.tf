@@ -1,31 +1,20 @@
 
-# resource "azurerm_subnet_route_table_association" "example" {
-#   subnet_id      = azurerm_subnet.example.id
-#   route_table_id = azurerm_route_table.example.id
-# }
 
-# This is required for resource modules
-resource "azurerm_resource_group" "this" {
-    for_each = {for kk, kv in local.resource_groups : kk => kv
-        } # {for kk, kv in local.resource_groups.RGs : kk => kv}
-  location = each.value.location
-  name     = each.value.resource_group_name
-}
-# This is required for resource modules
-resource "azurerm_resource_group" "this2" {
-    for_each = {for kk, kv in local.resource_groups2.RGs : kk => kv
-        } # {for kk, kv in local.resource_groups.RGs : kk => kv}
-  location = each.value.location
-  name     = format("%s-${each.value.resource_group_name}", "v2-")
-}
+    # This is required for resource modules
+    resource "azurerm_resource_group" "this" {
+        for_each = {for kk, kv in local.resource_groups : kk => kv
+            } # {for kk, kv in local.resource_groups.RGs : kk => kv}
+        location = each.value.location
+        name     = each.value.resource_group_name
+    }
 
-    #Defining the first virtual network (vnet-1) with its subnets and settings.
-    module "vnet1" {
+    module "vnets" {
         depends_on = [ azurerm_resource_group.this, ]
         for_each = merge({for kk, kv in local.vnet_object : "${kv.name}" => kv  }) #local.creating_nested_objects_vnets2 # {for kk, kv in local.creating_nested_objects_vnets2 : kk => kv }
         source              = "Azure/avm-res-network-virtualnetwork/azurerm"
-        location            = each.value.location
+        
         name                = each.value.name
+        location            = each.value.location
         resource_group_name = each.value.resource_group_name
 
         address_space = each.value.virtual_network_address_space
@@ -36,48 +25,8 @@ resource "azurerm_resource_group" "this2" {
         flow_timeout_in_minutes = 30
 
         subnets = each.value.subnets
-            /*{
-                subnet0 = {
-                    name                            = "subnet1"
-                    default_outbound_access_enabled = false
-                    #sharing_scope                   = "Tenant"  #NOTE: This preview feature requires approval, leaving off in example: Microsoft.Network/EnableSharedVNet
-                    address_prefixes = ["10.150.192.0/24", "10.150.193.0/24"]
-                }
-                # subnet1 = {
-                #     name                            = "${module.naming.subnet.name_unique}1"
-                #     address_prefixes                = ["192.168.1.0/24"]
-                #     default_outbound_access_enabled = false
-                #     delegation = [{
-                #         name = "Microsoft.Web.serverFarms"
-                #         service_delegation = {
-                #         name = "Microsoft.Web/serverFarms"
-                #         }
-                #     }]
-                #     nat_gateway = {
-                #         id = azurerm_nat_gateway.this.id
-                #     }
-                #     network_security_group = {
-                #         id = azurerm_network_security_group.https.id
-                #     }
-                #     route_table = {
-                #         id = azurerm_route_table.this.id
-                #     }
-                #     service_endpoints = ["Microsoft.Storage", "Microsoft.KeyVault"]
-                #     service_endpoint_policies = {
-                #         policy1 = {
-                #         id = azurerm_subnet_service_endpoint_storage_policy.this.id
-                #         }
-                #     }
-                #     role_assignments = {
-                #         role1 = {
-                #         principal_id               = azurerm_user_assigned_identity.this.principal_id
-                #         role_definition_id_or_name = "Contributor"
-                #         }
-                # }
-            
-            }*/
-    /*
 
+        /*
         ddos_protection_plan = {
             id = azurerm_network_ddos_protection_plan.this.id
             # due to resource cost
@@ -106,16 +55,17 @@ resource "azurerm_resource_group" "this2" {
             log_analytics_destination_type = "Dedicated"
             }
         }
-     */
+        */
     }
 
     #Creating a Route Table with a unique name in the specified location.
     resource "azurerm_route_table" "this" {
-        depends_on = [ module.vnet1, module.vnet1,  ]
+        depends_on = [ module.vnets, module.vnets,  ]
         for_each = {for kk, kv in local.creating_nested_objects_rt2 : kv.name => kv
-        }
-        location            = each.value.location
+            }
+
         name                = format("%s-${each.value.name}", "${each.value.namespace}-rt")
+        location            = each.value.location
         resource_group_name = each.value.resource_group_name
     }
 
@@ -124,14 +74,14 @@ resource "azurerm_resource_group" "this2" {
         for_each = { for top_key, top_value in flatten([
                 for net_key, net_v in local.creating_nested_objects_vnets2 : [
                     for snet_k, snet_v in net_v.subnets : {
-                        snet_id = module.vnet1[net_v.name].subnets[snet_v.name].resource_id
+                        snet_id = module.vnets[net_v.name].subnets[snet_v.name].resource_id
                         rt_id = azurerm_route_table.this[snet_v.rt_key].id
                     } if snet_v.rt_key != null || snet_v.nsg_key != null
                 ]
               ]) : "${top_key}" => top_value
-    }
-      subnet_id = each.value.snet_id
-      route_table_id = each.value.rt_id
+        }
+        subnet_id = each.value.snet_id
+        route_table_id = each.value.rt_id
     }
 
     resource "azurerm_network_security_group" "this" {
@@ -139,7 +89,7 @@ resource "azurerm_resource_group" "this2" {
         for_each = {for kk, kv in local.creating_nested_objects_nsg2 : kv.name => kv
         }
         location            = each.value.location
-        name                =  each.value.name #format("%s-${each.value.name}", "${each.value.namespace}-nsg")
+        name                = format("%s-${each.value.name}", "${each.value.namespace}-nsg") # each.value.name #
         resource_group_name = each.value.resource_group_name
 
         security_rule {
@@ -154,19 +104,19 @@ resource "azurerm_resource_group" "this2" {
             source_port_range          = "*"
         }
     }
-    resource "azurerm_subnet_network_security_group_association" "name" {
+    resource "azurerm_subnet_network_security_group_association" "this" {
         depends_on = [ azurerm_network_security_group.this ]
         for_each = { for top_key, top_value in flatten([
                 for net_key, net_v in local.creating_nested_objects_vnets2 : [
                     for snet_k, snet_v in net_v.subnets : {
-                        snet_id = module.vnet1[net_v.name].subnets[snet_v.name].resource_id
+                        snet_id = module.vnets[net_v.name].subnets[snet_v.name].resource_id
                         nsg_id = azurerm_network_security_group.this[snet_v.nsg_key].id
                     } if snet_v.rt_key != null || snet_v.nsg_key != null
                 ]
               ]) : "${top_key}" => top_value
-    }
-      subnet_id = each.value.snet_id
-      network_security_group_id = each.value.nsg_id
+        }
+        subnet_id = each.value.snet_id
+        network_security_group_id = each.value.nsg_id
       
     }
 
@@ -265,9 +215,9 @@ resource "azurerm_resource_group" "this2" {
     }
 
     peerings = {
-        peertovnet1 = {
-        name                                  = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnet1"
-        remote_virtual_network_resource_id    = module.vnet1.resource_id
+        peertovnets = {
+        name                                  = "${module.naming.virtual_network_peering.name_unique}-vnet2-to-vnets"
+        remote_virtual_network_resource_id    = module.vnets.resource_id
         allow_forwarded_traffic               = true
         allow_gateway_transit                 = true
         allow_virtual_network_access          = true
@@ -275,7 +225,7 @@ resource "azurerm_resource_group" "this2" {
         enable_only_ipv6_peering              = false
         use_remote_gateways                   = false
         create_reverse_peering                = true
-        reverse_name                          = "${module.naming.virtual_network_peering.name_unique}-vnet1-to-vnet2"
+        reverse_name                          = "${module.naming.virtual_network_peering.name_unique}-vnets-to-vnet2"
         reverse_allow_forwarded_traffic       = false
         reverse_allow_gateway_transit         = false
         reverse_allow_virtual_network_access  = true
