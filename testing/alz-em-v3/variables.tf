@@ -58,8 +58,7 @@ variable "hub_connection" {
         tags = {
                 "Environment"      = "nprd"
                 }
-        resources = {
-            # resource_group_name = "ohmr-rg-core_fw-shared-wus2-002"            
+        resources = {           
             virtual_networks = {
                 ohmr-vnet-hub_fw-shared-wus2-002 = {
                     name = "ohmr-vnet-hub_fw-shared-wus2-002"
@@ -162,8 +161,7 @@ variable "hub_connection" {
         tags = {
                 "Environment"      = "nprd"
                 }
-        resources = {
-            # resource_group_name = "ohmr-rg-core_fw-shared-wus3-003"            
+        resources = {           
             virtual_networks = {
                ohmr-vnet-hub_fw-shared-wus3-003 = {name = "ohmr-vnet-hub_fw-shared-wus3-003"
                 virtual_network_address_space = ["10.150.192.0/23", "10.150.194.0/25"]

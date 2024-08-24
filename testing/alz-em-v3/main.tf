@@ -22,8 +22,7 @@ resource "azurerm_resource_group" "this2" {
     #Defining the first virtual network (vnet-1) with its subnets and settings.
     module "vnet1" {
         depends_on = [ azurerm_resource_group.this, ]
-        for_each = {for kk, kv in local.creating_nested_objects_vnets2 : kv.name => kv
-        } #local.creating_nested_objects_vnets2 # {for kk, kv in local.creating_nested_objects_vnets2 : kk => kv }
+        for_each = merge({for kk, kv in local.vnet_object : "${kv.name}" => kv  }) #local.creating_nested_objects_vnets2 # {for kk, kv in local.creating_nested_objects_vnets2 : kk => kv }
         source              = "Azure/avm-res-network-virtualnetwork/azurerm"
         location            = each.value.location
         name                = each.value.name

@@ -12,6 +12,20 @@ locals {
                     "id" = kv.id
                 }
     }
+    vnet_object = flatten([
+                for net_key, net_v in var.hub_connection : [
+                    for snet_k, snet_v in net_v.resources.virtual_networks : {
+                        resource_group_name = net_key
+                        location = net_v.location
+                        namespace = net_v.namespace
+                        tags = net_v.tags
+                        name = snet_v.name
+                        virtual_network_address_space = snet_v.virtual_network_address_space
+                        subnets = snet_v.subnets
+                    }
+                ]
+                
+    ])
     creating_nested_objects_vnets2 = flatten([
         for top_key, top_value in var.hub_connection :
         [ 

@@ -2,9 +2,35 @@
 #   value = azurerm_network_security_group.this 
 # #   azurerm_network_security_group.this["nsg-fw_ew_trust-test-wus2-001"].id
 # }
+output "vnets" {
+  value = module.vnet1["ohmr-vnet-hub_fw-shared-wus2-002"].subnets["GatewaySubnet"].resource_id
+}
+output "rt_assocition" {
+    value = {
+        for kk, kv in flatten([
+            for kk2, vv2 in module.vnet1 : [
+                for k2, v2 in  vv2.subnets : {
+                    name = v2.name
+                    id = v2.resource_id
+                } 
+            ]
+        ]) : "${kv.name}" => kv ...
+    }
+}
+# output "vnet_object" {
+#   value = {
+#         for kk, kv in flatten([
+#             for k2, v2 in module.vnet1 : [
+#                 for key, val in v2.subnets : {
+#                     "${key}" = val
+#                 }
+#             ]
+#         ]) : "${kk}" => kv
+#     }
+# }
 output "associate" {
   value = { for top_key, top_value in flatten([
-                for net_key, net_v in local.creating_nested_objects_vnets2 : [
+                for net_key, net_v in local.vnet_object : [
                     for snet_k, snet_v in net_v.subnets : {
                         vnet = net_v.name
                         # "${snet_v.rt_key}"
@@ -18,7 +44,7 @@ output "associate" {
                         rt_id = azurerm_route_table.this[snet_v.rt_key].id
                     } if snet_v.rt_key != null || snet_v.nsg_key != null
                 ]
-              ]) : "${top_key}" => top_value
+              ]) : "${top_value.snet}" => top_value
     }
   #module.vnet1["ohemr-vnet-hub_fw-shared-wus2-002"].subnets["GatewaySubnet"].resource_id
 }
