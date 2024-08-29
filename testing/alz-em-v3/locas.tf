@@ -12,6 +12,23 @@ locals {
                     "id" = kv.id
                 }
     }
+    
+    creating_nested_objects_eR_gw = flatten([
+        for top_key, top_value in var.hub_connection :
+        [ 
+            for key, value in top_value.resources.gateway: {
+                resource_group_name = top_key
+                namespace = top_value.namespace
+                location = top_value.location
+                name = value.name
+                type = value.type
+                sku = value.sku
+                vnet_key = value.vnet_key
+                
+                }
+        ]
+            if top_value.resources.gateway != null
+    ])
     vnet_object = flatten([
                 for net_key, net_v in var.hub_connection : [
                     for snet_k, snet_v in net_v.resources.virtual_networks : {
@@ -23,7 +40,7 @@ locals {
                         virtual_network_address_space = snet_v.virtual_network_address_space
                         subnets = snet_v.subnets
                     }
-                ]
+                ] if net_v.resources.virtual_networks != null
                 
     ])
     creating_nested_objects_vnets2 = flatten([
@@ -38,7 +55,7 @@ locals {
                 virtual_network_address_space = value.virtual_network_address_space
                 subnets = value.subnets
                 }
-        ]
+        ] if top_value.resources.virtual_networks != null
     ])
     
     creating_nested_objects_rt2 = flatten([
@@ -52,7 +69,7 @@ locals {
                 name = value.name
                 rules = value.rules
                 }
-        ]
+        ] if top_value.resources.route_tables != null
     ])
 
     creating_nested_objects_nsg2 = flatten([
@@ -66,7 +83,7 @@ locals {
                 name = value.name
                 rules = value.rules
                 }
-        ]
+        ] if top_value.resources.network_security_groups != null
     ])
     resource_groups = [
      for top_key, top_value in var.hub_connection :
@@ -99,7 +116,7 @@ locals {
                         "${rk}" = rv
                         resource_group_name         = index_key
                         location = kv.location
-                    }
+                    }  if kv.resources != null
                 ]
               ] : "${top_key}" => top_value
     }

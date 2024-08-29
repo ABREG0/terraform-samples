@@ -86,8 +86,7 @@
 
     resource "azurerm_network_security_group" "this" {
         depends_on = [ azurerm_subnet_route_table_association.this  ]
-        for_each = {for kk, kv in local.creating_nested_objects_nsg2 : kv.name => kv
-        }
+        for_each = {for kk, kv in local.creating_nested_objects_nsg2 : kv.name => kv }
         location            = each.value.location
         name                = format("%s-${each.value.name}", "${each.value.namespace}-nsg") # each.value.name #
         resource_group_name = each.value.resource_group_name
@@ -119,7 +118,80 @@
         network_security_group_id = each.value.nsg_id
       
     }
+    resource "azurerm_express_route_circuit_peering" "this" {
+        depends_on = [ azurerm_resource_group.this, azurerm_express_route_circuit.this ]
+        for_each = {
+            for kk, kv in local.creating_nested_objects_eR_gw : kv.name => kv 
+        }
+        peering_type                  = "AzurePrivatePeering"
+        express_route_circuit_name    = "ExR-circuit"
+        resource_group_name = each.value.resource_group_name
+        peer_asn                      = 100
+        primary_peer_address_prefix   = "123.0.0.0/30"
+        secondary_peer_address_prefix = "123.0.0.4/30"
+        ipv4_enabled                  = true
+        vlan_id                       = 300
 
+        ipv6 {
+            primary_peer_address_prefix   = "2002:db01::/126"
+            secondary_peer_address_prefix = "2003:db01::/126"
+            enabled                       = true
+        }
+    }
+    resource "azurerm_express_route_circuit" "this" {
+        depends_on = [ azurerm_resource_group.this ]
+        for_each = {
+            for kk, kv in local.creating_nested_objects_eR_gw : kv.name => kv 
+        }
+        name                = "ExR-circuit"
+        location            = each.value.location
+        resource_group_name = each.value.resource_group_name
+        service_provider_name = "Equinix"
+        peering_location      = "Silicon Valley"
+        bandwidth_in_mbps     = 50
+
+        sku {
+            tier   = "Standard"
+            family = "MeteredData"
+        }
+
+        tags = {
+            environment = "Production"
+        }
+    }
+    resource "azurerm_public_ip" "this" {
+        depends_on = [ azurerm_resource_group.this ]
+        name                = "test"
+        location            = "westus2"
+        resource_group_name = "ohmr-rg-core_fw-shared-wus2-002"
+        sku = "Standard"
+
+        allocation_method = "Static"
+    }
+    resource "azurerm_virtual_network_gateway" "this" {
+        depends_on = [ azurerm_resource_group.this ]
+        for_each = {
+            for kk, kv in local.creating_nested_objects_eR_gw : kv.name => kv 
+        }
+        name                = each.value.name
+        location            = each.value.location
+        resource_group_name = each.value.resource_group_name
+
+        type     = "ExpressRoute"
+        # vpn_type = "RouteBased"
+
+        active_active = false
+        enable_bgp    = false
+        sku           = "ErGw2AZ"
+
+        ip_configuration {
+            name                          = "vnetGatewayConfig"
+            public_ip_address_id          = azurerm_public_ip.this.id
+            private_ip_address_allocation = "Dynamic"
+            subnet_id                     = module.vnets[each.value.vnet_key].subnets["GatewaySubnet"].resource_id #azurerm_subnet.example.id
+        }
+
+    }
     ## Section to provide a random Azure region for the resource group
     # This allows us to randomize the region for the resource group.
     module "regions" {
